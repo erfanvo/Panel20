@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus | Corporate Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; color: #1e293b; padding-bottom: 80px; }
+        @media (min-width: 1024px) { body { padding-bottom: 0; } }
+        .corp-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .terminal-box { background: #0f172a; color: #10b981; border-radius: 12px; height: 200px; overflow-y: auto; font-family: monospace; }
+        table.dataTable { border-collapse: collapse !important; width: 100% !important; font-size: 0.875rem; }
+        table.dataTable thead th { border-bottom: 2px solid #e2e8f0 !important; color: #64748b !important; padding: 12px; text-align: right; }
+        table.dataTable tbody td { border-bottom: 1px solid #f1f5f9 !important; padding: 12px; }
+        .dataTables_filter input { padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; margin-right: 8px; }
+        .dataTables_filter input:focus { border-color: #2563eb; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="antialiased lg:pb-8">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h1 class="text-lg font-bold text-slate-800">Nexus Console</h1>
+            </div>
+            <a href="/logout" class="text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 px-4 py-1.5 rounded-lg transition-colors">خروج</a>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="corp-card p-5">
+                <p class="text-xs font-semibold text-slate-500 mb-1">کل اکانت‌ها</p>
+                <div class="text-2xl font-black text-slate-900" id="stat-total">0</div>
+            </div>
+            <div class="corp-card p-5 bg-amber-50/50 border-amber-200">
+                <p class="text-xs font-semibold text-amber-600 mb-1">اکانت‌های خریددار</p>
+                <div class="text-2xl font-black text-amber-600 flex items-center gap-2" id="stat-ordered">0 <span class="text-sm">⭐</span></div>
+            </div>
+            <div class="corp-card p-5">
+                <p class="text-xs font-semibold text-slate-500 mb-1">پروکسی‌های فعال</p>
+                <div class="text-xl lg:text-2xl font-black text-blue-600" id="stat-proxies">بررسی...</div>
+            </div>
+            <div class="corp-card p-5 flex flex-col justify-center bg-slate-50">
+                <p class="text-xs font-semibold text-slate-500 mb-2">وضعیت موتور محلی</p>
+                <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 w-max shadow-sm">
+                    <div id="statusDot" class="h-2.5 w-2.5 rounded-full bg-slate-400"></div>
+                    <span id="statusText" class="text-xs font-bold text-slate-600">آفلاین</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Workspace -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+            <div class="hidden lg:flex lg:col-span-1 flex-col gap-4">
+                <div class="corp-card p-5">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100">پنل کنترل لوکال</h3>
+                    <button onclick="triggerAction('start')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl mb-3 transition-transform">استارت ثبت‌نام</button>
+                    <button onclick="triggerAction('check_orders')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl mb-3 shadow-sm flex justify-center items-center gap-2">⭐ بررسی خریدها</button>
+                    <button onclick="triggerAction('stop')" class="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-2.5 rounded-xl mb-3 transition-colors">توقف موتور</button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openExportModal()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-3 rounded-xl shadow-sm">خروجی</button>
+                    <button onclick="openWipeModal()" class="flex-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold py-3 rounded-xl">فلش دیتابیس</button>
+                </div>
+            </div>
+
+            <!-- Terminal -->
+            <div class="col-span-1 lg:col-span-3 corp-card overflow-hidden">
+                <div class="bg-slate-800 px-4 py-2 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                    <span class="text-xs font-mono text-slate-400 ml-2">Nexus Worker Log</span>
+                </div>
+                <div class="terminal-box p-4 text-xs leading-relaxed" id="terminalOutput"></div>
+            </div>
+        </div>
+
+        <!-- Database Table with Tabs -->
+        <div class="corp-card p-4 lg:p-6 mb-20 lg:mb-0">
+            <!-- Tabs -->
+            <div class="flex gap-2 mb-6 border-b border-slate-200 pb-px">
+                <button onclick="switchTab('normal')" id="tab-normal" class="px-6 py-2.5 rounded-t-xl font-bold text-sm bg-blue-600 text-white transition-colors">عادی (خام)</button>
+                <button onclick="switchTab('ordered')" id="tab-ordered" class="px-6 py-2.5 rounded-t-xl font-bold text-sm bg-slate-100 text-slate-600 transition-colors flex gap-2 items-center">⭐ خریددار</button>
+            </div>
+
+            <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-6">
+                <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 text-xs w-full lg:w-auto">
+                    <span class="font-medium text-slate-600">فیلتر تاریخ از:</span>
+                    <input type="datetime-local" id="filterStart" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none">
+                    <span class="font-medium text-slate-600">تا:</span>
+                    <input type="datetime-local" id="filterEnd" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none">
+                    <button onclick="resetDateFilter()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-300 font-medium">حذف فیلتر</button>
+                </div>
+            </div>
+
+            <!-- Normal Table -->
+            <div id="wrap-normal" class="overflow-x-auto">
+                <table id="normalTable" class="display nowrap w-full">
+                    <thead><tr><th>شماره موبایل</th><th>نام پروفایل</th><th>تاریخ ثبت</th><th>لینک اختصاصی</th><th>حذف</th></tr></thead><tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Ordered Table -->
+            <div id="wrap-ordered" class="overflow-x-auto hidden">
+                <table id="orderedTable" class="display nowrap w-full">
+                    <thead><tr><th>شماره موبایل</th><th>نام پروفایل</th><th>تاریخ ثبت</th><th>تعداد سفارش</th><th>لینک اختصاصی</th><th>حذف</th></tr></thead><tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 shadow z-40 px-4 py-3 flex gap-2 pb-safe">
+        <button onclick="triggerAction('start')" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg text-xs">ثبت‌نام</button>
+        <button onclick="triggerAction('check_orders')" class="flex-1 bg-amber-500 text-white font-bold py-2 rounded-lg text-xs">چکر</button>
+        <button onclick="openExportModal()" class="flex-1 bg-slate-800 text-white font-bold py-2 rounded-lg text-xs">خروجی</button>
+        <button onclick="triggerAction('stop')" class="bg-red-50 border border-red-200 text-red-600 p-2.5 rounded-lg flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path></svg></button>
+    </div>
+
+    <!-- Modals -->
+    <div id="exportModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg text-slate-800">خروجی <span id="exportTabName" class="text-blue-600">عادی</span></h3><button onclick="closeExportModal()" class="text-2xl text-slate-400">&times;</button></div>
+            <div class="flex flex-col gap-3">
+                <button onclick="exportData('raw_links')" class="text-right p-4 rounded-xl border border-slate-200 hover:border-blue-500 transition-colors"><div class="font-bold text-sm text-slate-700">۱. لینک‌های خام (TXT)</div></button>
+                <button onclick="exportData('links_phone')" class="text-right p-4 rounded-xl border border-slate-200 hover:border-emerald-500 transition-colors"><div class="font-bold text-sm text-slate-700">۲. لینک همراه شماره (TXT)</div></button>
+                <button onclick="exportData('numbered_links')" class="text-right p-4 rounded-xl border border-slate-200 hover:border-purple-500 transition-colors"><div class="font-bold text-sm text-slate-700">۳. لینک‌های شماره‌دار (TXT)</div></button>
+                <button onclick="exportData('json')" class="text-right p-4 rounded-xl border border-slate-200 hover:border-amber-500 transition-colors"><div class="font-bold text-sm text-slate-700">۴. بکاپ دیتابیس (JSON)</div></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="wipeModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl border-t-4 border-red-500">
+            <h3 class="font-bold text-lg text-slate-900 mb-2">هشدار حذف</h3>
+            <p class="text-sm text-slate-500 mb-4">جهت حذف کل دیتابیس (عادی و خریددار)، عبارت <span class="font-mono font-bold text-red-600">NEXUS-WIPE-ALL</span> را وارد کنید.</p>
+            <input type="text" id="wipeConfirmInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-center mb-5 font-mono outline-none focus:border-red-500" placeholder="NEXUS-WIPE-ALL">
+            <div class="flex gap-3">
+                <button onclick="closeWipeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium">لغو</button>
+                <button onclick="confirmWipe()" class="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-medium">حذف قطعی</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        let currentTab = 'normal';
+        let tNormal, tOrdered;
+
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            const minStr = document.getElementById('filterStart').value;
+            const maxStr = document.getElementById('filterEnd').value;
+            const rowDateStr = data[2];
+            if (!minStr && !maxStr) return true;
+            if (!rowDateStr) return false;
+            const rowDate = new Date(rowDateStr.replace(' ', 'T')).getTime();
+            const min = minStr ? new Date(minStr).getTime() : null;
+            const max = maxStr ? new Date(maxStr).getTime() : null;
+            if (min && rowDate < min) return false;
+            if (max && rowDate > max) return false;
+            return true;
+        });
+
+        $(document).ready(function() {
+            tNormal = $('#normalTable').DataTable({
+                language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" },
+                order: [[2, 'desc']],
+                columns: [
+                    { data: 'phone', render: d => `<span class="font-mono text-slate-700">${d}</span>` },
+                    { data: 'name', render: d => `<span class="font-medium">${d}</span>` },
+                    { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
+                    { data: 'link', render: d => `<div class="flex items-center gap-2"><input type="text" readonly value="${d}" class="text-xs font-mono bg-slate-50 border border-slate-200 rounded px-2 py-1 w-24 sm:w-32 outline-none"><button onclick="navigator.clipboard.writeText('${d}')" class="text-blue-600 text-xs font-bold bg-blue-50 px-2 py-1 rounded">کپی</button></div>` },
+                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-red-500 text-xs font-bold bg-red-50 px-2 py-1 rounded">حذف</button>` }
+                ],
+                ajax: { url: '/api/accounts/normal', dataSrc: 'data' }
+            });
+
+            tOrdered = $('#orderedTable').DataTable({
+                language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" },
+                order: [[2, 'desc']],
+                columns: [
+                    { data: 'phone', render: d => `<span class="font-mono text-slate-700">${d}</span>` },
+                    { data: 'name', render: d => `<span class="font-medium">${d}</span>` },
+                    { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
+                    { data: 'total_orders', render: d => `<span class="bg-amber-100 text-amber-700 font-black text-xs px-2 py-1 rounded-md shadow-sm">⭐ ${d} سفارش</span>` },
+                    { data: 'link', render: d => `<div class="flex items-center gap-2"><input type="text" readonly value="${d}" class="text-xs font-mono bg-slate-50 border border-slate-200 rounded px-2 py-1 w-24 sm:w-32 outline-none"><button onclick="navigator.clipboard.writeText('${d}')" class="text-blue-600 text-xs font-bold bg-blue-50 px-2 py-1 rounded">کپی</button></div>` },
+                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-red-500 text-xs font-bold bg-red-50 px-2 py-1 rounded">حذف</button>` }
+                ],
+                ajax: { url: '/api/accounts/ordered', dataSrc: 'data' }
+            });
+
+            $('#filterStart, #filterEnd').on('change', () => { tNormal.draw(); tOrdered.draw(); });
+        });
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('exportTabName').innerText = tab === 'normal' ? 'عادی' : 'طلایی';
+            if (tab === 'normal') {
+                $('#wrap-normal').show(); $('#wrap-ordered').hide();
+                $('#tab-normal').attr('class', 'px-6 py-2.5 rounded-t-xl font-bold text-sm bg-blue-600 text-white transition-colors');
+                $('#tab-ordered').attr('class', 'px-6 py-2.5 rounded-t-xl font-bold text-sm bg-slate-100 text-slate-600 transition-colors flex gap-2 items-center');
+            } else {
+                $('#wrap-normal').hide(); $('#wrap-ordered').show();
+                $('#tab-ordered').attr('class', 'px-6 py-2.5 rounded-t-xl font-bold text-sm bg-blue-600 text-white transition-colors flex gap-2 items-center');
+                $('#tab-normal').attr('class', 'px-6 py-2.5 rounded-t-xl font-bold text-sm bg-slate-100 text-slate-600 transition-colors');
+            }
+        }
+
+        function resetDateFilter() { document.getElementById('filterStart').value = ''; document.getElementById('filterEnd').value = ''; tNormal.draw(); tOrdered.draw(); }
+
+        function fetchStats() {
+            fetch('/api/stats').then(res => res.json()).then(data => {
+                document.getElementById('stat-total').innerText = data.total_accounts;
+                document.getElementById('stat-ordered').innerHTML = `${data.ordered_accounts} <span class="text-sm">⭐</span>`;
+                const proxyEl = document.getElementById('stat-proxies');
+                if(data.active_proxies === null) { proxyEl.innerText = "سیستم اجرا نیست"; proxyEl.className = "text-base lg:text-xl font-bold text-red-500 mt-1"; } 
+                else { proxyEl.innerText = data.active_proxies; proxyEl.className = "text-2xl font-black text-blue-600"; }
+
+                const sDot = document.getElementById('statusDot'), sTxt = document.getElementById('statusText');
+                if (data.system_status === 'Registering') { sDot.className = 'h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse'; sTxt.innerText = 'در حال ثبت نام'; sTxt.className = 'text-xs font-bold text-blue-600'; } 
+                else if (data.system_status === 'Checking') { sDot.className = 'h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse'; sTxt.innerText = 'چک خریدها'; sTxt.className = 'text-xs font-bold text-amber-600'; } 
+                else { sDot.className = 'h-2.5 w-2.5 rounded-full bg-slate-400'; sTxt.innerText = 'آماده‌باش'; sTxt.className = 'text-xs font-bold text-slate-600'; }
+            });
+        }
+
+        let lastLogs = "";
+        function fetchLogs() {
+            fetch('/api/logs').then(res => res.json()).then(data => {
+                const logsStr = JSON.stringify(data.logs);
+                if (logsStr !== lastLogs) {
+                    const out = document.getElementById('terminalOutput'); out.innerHTML = '';
+                    if(data.logs.length === 0) { out.innerHTML = '<span class="text-slate-500">لاگی دریافت نشد...</span>'; }
+                    data.logs.forEach(l => { 
+                        const div = document.createElement('div'); div.className = 'mb-1'; 
+                        let color = l.message.includes('❌') || l.message.includes('⛔') ? 'text-red-400' : (l.message.includes('⭐') || l.message.includes('🔎') ? 'text-amber-400' : 'text-emerald-400');
+                        div.innerHTML = `<span class="text-slate-500">[${l.timestamp}]</span> > <span class="${color}">${l.message}</span>`; 
+                        out.appendChild(div); 
+                    });
+                    out.scrollTop = out.scrollHeight; lastLogs = logsStr;
+                }
+            });
+        }
+        setInterval(fetchStats, 3000); setInterval(fetchLogs, 3000); fetchStats(); fetchLogs();
+
+        function triggerAction(action) { fetch(`/api/action/${action}`, { method: 'POST' }).then(res => res.json()).then(data => { alert(data.message); fetchStats(); }); }
+        function deleteAccount(phone) { if(confirm('رکورد حذف و خط در لوکال آزاد شود؟')) { fetch('/api/action/delete_account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({phone: phone}) }).then(() => { tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); }); } }
+        
+        function openWipeModal() { document.getElementById('wipeConfirmInput').value = ''; document.getElementById('wipeModal').classList.remove('hidden'); }
+        function closeWipeModal() { document.getElementById('wipeModal').classList.add('hidden'); }
+        function confirmWipe() {
+            const code = document.getElementById('wipeConfirmInput').value;
+            fetch('/api/action/clean', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({code: code}) })
+            .then(res => res.json()).then(data => { alert(data.message); closeWipeModal(); tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); fetchStats(); });
+        }
+
+        function openExportModal() { document.getElementById('exportModal').classList.remove('hidden'); }
+        function closeExportModal() { document.getElementById('exportModal').classList.add('hidden'); }
+        function exportData(type) {
+            const activeTable = currentTab === 'normal' ? tNormal : tOrdered;
+            const rows = activeTable.rows({ search: 'applied' }).data().toArray();
+            if (rows.length === 0) { alert('هیچ رکوردی در جدول یافت نشد.'); return; }
+            let content = "", name = `Nexus_${currentTab}_${type}_${new Date().toISOString().slice(0,10)}`, mime = "text/plain;charset=utf-8";
+            
+            if (type === 'raw_links') { content = rows.map(r => r.link).join('\n'); name += ".txt"; } 
+            else if (type === 'links_phone') { content = rows.map(r => `شماره: ${r.phone} - لینک: ${r.link}`).join('\n'); name += ".txt"; } 
+            else if (type === 'numbered_links') { content = rows.map((r, i) => `${i + 1}. ${r.link}`).join('\n'); name += ".txt"; } 
+            else if (type === 'json') { content = JSON.stringify(rows, null, 2); name += ".json"; mime = "application/json;charset=utf-8"; }
+            
+            const blob = new Blob([content], { type: mime }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; link.click(); closeExportModal();
+        }
+    </script>
+</body>
+  </html>
