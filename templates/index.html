@@ -36,7 +36,12 @@
                 </div>
                 <h1 class="text-lg font-bold text-slate-800">داشبورد مدیریت دیتابیس</h1>
             </div>
-            <a href="/logout" class="text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-1.5 rounded transition-colors">خروج</a>
+            <div class="flex items-center gap-3">
+                <a href="/api/download_checker_logs" target="_blank" class="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded transition-colors border border-slate-200">
+                    <i class="ph-bold ph-file-text text-sm"></i> دانلود لاگ خطاهای چکر
+                </a>
+                <a href="/logout" class="text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-1.5 rounded transition-colors">خروج</a>
+            </div>
         </div>
     </header>
 
@@ -82,9 +87,12 @@
                     </div>
                 </div>
             </div>
-            <div class="col-span-1 lg:col-span-3 clean-card overflow-hidden">
-                <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-600">ترمینال گزارشات و لاگ</span>
+            <div class="col-span-1 lg:col-span-3 clean-card overflow-hidden flex flex-col">
+                <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-600">ترمینال گزارشات و لاگ زنده</span>
+                    <a href="/api/download_checker_logs" target="_blank" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded shadow-sm transition-colors">
+                        <i class="ph-bold ph-download-simple"></i> دانلود لاگ خطاهای چکر (.txt)
+                    </a>
                 </div>
                 <div class="terminal-box p-4 text-sm" id="terminalOutput"></div>
             </div>
@@ -121,6 +129,7 @@
     <div class="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-40 px-4 py-2 flex gap-2 pb-safe shadow">
         <button onclick="triggerAction('start')" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-play text-base"></i>ثبت‌نام</button>
         <button onclick="openCustomProxyModal()" class="flex-1 bg-emerald-600 text-white font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-shield-check text-base"></i>چکر من</button>
+        <a href="/api/download_checker_logs" target="_blank" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-file-text text-base"></i>لاگ خطا</a>
         <button onclick="openExportModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-download-simple text-base"></i>خروجی</button>
         <button onclick="triggerAction('stop')" class="flex-1 bg-white border border-slate-300 text-slate-600 font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-stop text-base"></i>توقف</button>
     </div>
@@ -132,10 +141,17 @@
                 <button onclick="closeCustomProxyModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button>
             </div>
             <p class="text-xs text-slate-500 mb-3 leading-relaxed">
-                لیست پروکسی‌های خود را خط‌به‌خط وارد کنید. نیازی به روشن بودن سیستم آقای بیگی نیست.<br>
-                فرمت‌های پشتیبانی شده: <code class="bg-slate-100 px-1 rounded text-slate-700">ip:port:user:pass</code> یا <code class="bg-slate-100 px-1 rounded text-slate-700">http://user:pass@ip:port</code>
+                لیست پروکسی‌های خود را خط‌به‌خط وارد کنید.<br>
+                فرمت: <code class="bg-slate-100 px-1 rounded text-slate-700">ip:port:user:pass</code> یا <code class="bg-slate-100 px-1 rounded text-slate-700">http://user:pass@ip:port</code>
             </p>
             <textarea id="customProxiesInput" class="w-full h-44 border border-slate-300 rounded-lg p-3 text-xs font-mono outline-none focus:border-emerald-500 mb-4" placeholder="192.168.1.1:8080:username:password&#10;192.168.1.2:8080:username:password" dir="ltr"></textarea>
+            
+            <div class="flex items-center justify-between mb-4">
+                <a href="/api/download_checker_logs" target="_blank" class="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                    <i class="ph-bold ph-download-simple"></i> دانلود لاگ اجرای قبلی چکر
+                </a>
+            </div>
+
             <div class="flex gap-2">
                 <button onclick="closeCustomProxyModal()" class="flex-1 py-2.5 rounded-lg bg-slate-100 text-slate-600 font-bold text-sm">لغو</button>
                 <button onclick="submitCustomChecker()" class="flex-1 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow">شروع بررسی خریدها</button>
@@ -237,7 +253,7 @@
                     if(data.logs.length === 0) out.innerHTML = '<span class="text-slate-500">منتظر دریافت لاگ...</span>';
                     data.logs.forEach(l => { 
                         const div = document.createElement('div'); div.className = 'mb-1'; 
-                        let color = l.message.includes('❌') || l.message.includes('error') ? 'text-rose-400' : 'text-emerald-400';
+                        let color = l.message.includes('❌') || l.message.includes('error') || l.message.includes('⚠️') ? 'text-rose-400' : 'text-emerald-400';
                         div.innerHTML = `<span class="text-slate-500">[${l.timestamp}] ></span> <span class="${color}">${l.message}</span>`; 
                         out.appendChild(div); 
                     });
@@ -252,7 +268,6 @@
         function triggerAction(action) { fetch(`/api/action/${action}`, { method: 'POST' }).then(() => fetchStats()); }
         function deleteAccount(phone) { if(confirm('رکورد حذف شود؟')) { fetch('/api/action/delete_account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({phone: phone}) }).then(() => { tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); }); } }
         
-        // Custom Proxy Modal
         function openCustomProxyModal() { document.getElementById('customProxyModal').classList.remove('hidden'); }
         function closeCustomProxyModal() { document.getElementById('customProxyModal').classList.add('hidden'); }
         function submitCustomChecker() {
