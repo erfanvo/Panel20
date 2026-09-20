@@ -1,10 +1,10 @@
 """
-Nexus Extractor Engine - Advanced Cloud Panel with Custom Proxy Checker
+Nexus Extractor Engine - Advanced Cloud Panel with Detailed Diagnostic Logs
 """
 import os, json, secrets, threading, time
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from flask import Flask, render_template_string, render_template, jsonify, request, session, redirect, url_for
+from flask import Flask, render_template_string, render_template, jsonify, request, session, redirect, url_for, Response
 import requests
 import redis
 
@@ -21,6 +21,16 @@ try:
     db.ping()
 except Exception:
     db = None
+
+def log_checker_event(msg):
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{now_str}] {msg}"
+    if db:
+        try:
+            db.rpush("nexus:checker_logs", line)
+            db.ltrim("nexus:checker_logs", -3000, -1)  # نگه‌داری ۳۰۰۰ لاگ آخر
+        except Exception:
+            pass
 
 # ================= Token Worker =================
 def token_worker():
@@ -66,8 +76,14 @@ def format_proxy(raw_p):
 def check_account_with_proxy(phone, acc_data, proxy_url):
     try:
         nexus_token = acc_data.get("token")
+        if not nexus_token:
+            log_checker_event(f"❌ شماره {phone} | خطا: توکن نکسوس در دیتابیس یافت نشد.")
+            return False, 0
+
         session_raw = db.get(f"jet_session:{nexus_token}")
-        if not session_raw: return False, 0
+        if not session_raw:
+            log_checker_event(f"❌ شماره {phone} | خطا: سشن jet_session:{nexus_token} در ردیس یافت نشد (احتمالاً منقضی شده).")
+            return False, 0
         
         session_data = json.loads(session_raw)
         cookies = session_data.get("cookies", [])
@@ -76,7 +92,10 @@ def check_account_with_proxy(phone, acc_data, proxy_url):
             if c.get("name") == "token":
                 dk_token = c.get("value")
                 break
-        if not dk_token: return False, 0
+        
+        if not dk_token:
+            log_checker_event(f"❌ شماره {phone} | خطا: کوکی توکن اصلی دیجی‌کالا در نشست وجود ندارد.")
+            return False, 0
 
         headers = {
             "authority": "api.digikalajet.ir",
@@ -87,30 +106,52 @@ def check_account_with_proxy(phone, acc_data, proxy_url):
             "clientos": "Android"
         }
         proxies = {"http": proxy_url, "https": proxy_url}
+        
         res = requests.get("https://api.digikalajet.ir/order-shipments/?ch=jj", headers=headers, proxies=proxies, timeout=12)
+        
         if res.status_code == 200:
             orders = res.json().get("data", {}).get("pager", {}).get("total_items", 0)
             if orders > 0:
                 acc_data["total_orders"] = orders
                 db.hset("jet:ordered_accounts", phone, json.dumps(acc_data, ensure_ascii=False))
                 db.hdel("jet:bulk_accounts", phone)
+                log_checker_event(f"✅ شماره {phone} | وضعیت: خریددار ({orders} سفارش) | انتقال یافت.")
                 return True, orders
+            else:
+                log_checker_event(f"⚪ شماره {phone} | وضعیت: بدون خرید (0 سفارش)")
+                return False, 0
+        else:
+            log_checker_event(f"⚠️ شماره {phone} | خطای سرور دیجی‌کالا (کد {res.status_code}) | پاسخ: {res.text[:90]} | پروکسی: {proxy_url}")
+            return False, 0
+
+    except requests.exceptions.ProxyError:
+        log_checker_event(f"🚫 شماره {phone} | خطای پروکسی (ProxyError): اتصال برقرار نشد یا نام کاربری/رمز پروکسی اشتباه است | پروکسی: {proxy_url}")
         return False, 0
-    except Exception:
+    except requests.exceptions.Timeout:
+        log_checker_event(f"⏱️ شماره {phone} | تایم‌اوت پروکسی (Timeout): پروکسی پاسخ نداد | پروکسی: {proxy_url}")
+        return False, 0
+    except Exception as e:
+        log_checker_event(f"❌ شماره {phone} | خطای غیرمنتظره: {str(e)} | پروکسی: {proxy_url}")
         return False, 0
 
 def run_cloud_checker_thread(proxy_list):
     valid_proxies = [p for p in [format_proxy(x) for x in proxy_list] if p]
     if not valid_proxies:
-        db.rpush("bot:admin_alerts", "❌ ارور چکر ابری: هیچ پروکسی معتبری وارد نشد.")
+        msg = "❌ خطای چکر: هیچ پروکسی معتبری فرمت نشد. لطفاً فرمت ip:port:user:pass را رعایت کنید."
+        db.rpush("bot:admin_alerts", msg)
+        log_checker_event(msg)
         return
 
     accounts = db.hgetall("jet:bulk_accounts")
     if not accounts:
-        db.rpush("bot:admin_alerts", "⚠️ چکر ابری: لیست خام برای بررسی خالی است.")
+        msg = "⚠️ چکر: لیست خام خالی است و اکانتی برای بررسی وجود ندارد."
+        db.rpush("bot:admin_alerts", msg)
+        log_checker_event(msg)
         return
 
-    db.rpush("bot:admin_alerts", f"🔎 شروع چکر با پروکسی شخصی | تعداد پروکسی: {len(valid_proxies)} | اکانت‌ها: {len(accounts)}")
+    start_msg = f"🔎 شروع چکر با پروکسی شخصی | پروکسی‌ها: {len(valid_proxies)} | اکانت‌ها: {len(accounts)}"
+    db.rpush("bot:admin_alerts", start_msg)
+    log_checker_event(start_msg)
     
     ordered_count = 0
     p_idx = 0
@@ -129,7 +170,9 @@ def run_cloud_checker_thread(proxy_list):
             if is_ordered:
                 ordered_count += 1
 
-    db.rpush("bot:admin_alerts", f"🎯 پایان بررسی | تعداد {ordered_count} اکانت دارای خرید شناسایی و منتقل شدند.")
+    finish_msg = f"🎯 پایان چکر | تعداد {ordered_count} اکانت دارای خرید شناسایی و جدا شدند."
+    db.rpush("bot:admin_alerts", finish_msg)
+    log_checker_event(finish_msg)
 
 LOGIN_HTML = """<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ورود | Nexus</title><script src="https://cdn.tailwindcss.com"></script><style>body{background-color:#f8fafc;}</style></head><body class="min-h-screen flex items-center justify-center p-4"><div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl w-full max-w-sm"><h2 class="text-2xl font-bold text-slate-800 text-center mb-6">NEXUS PANEL</h2><form method="POST" action="/login" class="flex flex-col gap-4"><input type="password" name="password" placeholder="رمز عبور..." required class="bg-slate-50 border border-slate-300 rounded-xl p-3 text-center outline-none focus:border-blue-500" dir="ltr"><button type="submit" class="bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700">ورود</button></form></div></body></html>"""
 
@@ -199,7 +242,26 @@ def start_custom_checker():
         return jsonify({"status": "error", "message": "لیست پروکسی خالی است."})
     
     threading.Thread(target=run_cloud_checker_thread, args=(proxy_list,), daemon=True).start()
-    return jsonify({"status": "ok", "message": f"چکر ابری با {len(proxy_list)} پروکسی استارت خورد."})
+    return jsonify({"status": "ok", "message": f"چکر ابری با {len(proxy_list)} پروکسی شروع به کار کرد."})
+
+# ایندپوینت جدید برای دانلود فایل متنی لاگ‌های چکر
+@app.route('/api/download_checker_logs')
+def download_checker_logs():
+    if not session.get('logged_in') or not db:
+        return "دسترسی غیرمجاز", 401
+    
+    raw_logs = db.lrange("nexus:checker_logs", 0, -1)
+    if not raw_logs:
+        content = "هنوز هیچ لاگی از چکر ثبت نشده است. ابتدا عملیات بررسی را اجرا کنید."
+    else:
+        content = "\n".join(raw_logs)
+    
+    filename = f"Nexus_Checker_Logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    return Response(
+        content,
+        mimetype="text/plain;charset=utf-8",
+        headers={"Content-Disposition": f"attachment;filename={filename}"}
+    )
 
 @app.route('/api/action/<cmd>', methods=['POST'])
 def handle_action(cmd):
@@ -214,9 +276,9 @@ def handle_action(cmd):
     elif cmd == 'clean':
         req = request.json or {}
         if req.get('code') != 'NEXUS-WIPE-ALL': return jsonify({"status": "error", "message": "کد اشتباه است."})
-        db.delete("jet:processed_phones", "jet:bulk_accounts", "jet:ordered_accounts", "bot:admin_alerts", "bot:new_accounts")
+        db.delete("jet:processed_phones", "jet:bulk_accounts", "jet:ordered_accounts", "bot:admin_alerts", "bot:new_accounts", "nexus:checker_logs")
         for key in db.keys("jet_session:*"): db.delete(key)
-        return jsonify({"status": "ok", "message": "دیتابیس فلش شد."})
+        return jsonify({"status": "ok", "message": "دیتابیس و لاگ‌ها به طور کامل پاک شدند."})
     return jsonify({"status": "error"})
 
 @app.route('/api/action/delete_account', methods=['POST'])
