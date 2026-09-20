@@ -3,257 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus | Premium Workspace</title>
+    <title>Nexus Panel</title>
     
-    <!-- Fonts & Tailwind -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     
     <style>
-        body { 
-            font-family: 'Vazirmatn', sans-serif; 
-            background-color: #f4f7f6; /* رنگ پس‌زمینه بسیار نرم */
-            color: #334155; 
-            padding-bottom: 90px;
-        }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; color: #1e293b; padding-bottom: 80px; }
         @media (min-width: 1024px) { body { padding-bottom: 0; } }
-
-        /* کارت‌های شیشه‌ای و لوکس */
-        .glass-card { 
-            background: #ffffff; 
-            border: 1px solid rgba(226, 232, 240, 0.8); 
-            border-radius: 20px; 
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.03); 
-            transition: all 0.3s ease;
-        }
-        .glass-card:hover { box-shadow: 0 15px 40px -10px rgba(0,0,0,0.06); }
-
-        /* ترمینال طرح مک */
-        .mac-terminal { 
-            background: #0f172a; 
-            border-radius: 16px; 
-            overflow: hidden; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .mac-header { background: #1e293b; padding: 12px 16px; display: flex; align-items: center; }
-        .mac-dots { display: flex; gap: 8px; }
-        .mac-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .terminal-body { height: 260px; overflow-y: auto; padding: 16px; font-family: 'Consolas', monospace; font-size: 13px; line-height: 1.8; color: #10b981; }
-
-        /* استایل اختصاصی برای جدول تا از حالت زشت پیشفرض خارج شود */
-        table.dataTable.no-footer { border-bottom: none !important; }
-        table.dataTable thead th { border-bottom: 1px solid #e2e8f0 !important; color: #94a3b8 !important; font-weight: 500; font-size: 13px; padding: 16px 12px; text-align: right; }
-        table.dataTable tbody td { border-bottom: 1px solid #f8fafc !important; padding: 16px 12px; font-size: 14px; color: #475569; vertical-align: middle; }
+        .clean-card { background: #ffffff; border-radius: 12px; box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+        .terminal-box { background: #0f172a; color: #10b981; border-radius: 8px; height: 260px; overflow-y: auto; font-family: monospace; }
+        table.dataTable { border-collapse: collapse !important; width: 100% !important; font-size: 0.875rem; color: #334155; }
+        table.dataTable thead th { border-bottom: 2px solid #e2e8f0 !important; color: #64748b !important; padding: 14px 12px; text-align: right; font-weight: bold; }
+        table.dataTable tbody tr { transition: background-color 0.2s; border-bottom: 1px solid #f1f5f9 !important; }
         table.dataTable tbody tr:hover { background-color: #f8fafc !important; }
-        .dataTables_wrapper .dataTables_filter input { padding: 8px 16px; border-radius: 12px; border: 1px solid #e2e8f0; outline: none; background: #f8fafc; transition: all 0.2s; margin-right: 12px; }
-        .dataTables_wrapper .dataTables_filter input:focus { background: #fff; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #6366f1 !important; color: white !important; border: none !important; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3); }
-
-        /* تب‌های سوئیچ */
-        .tab-btn { padding: 8px 24px; border-radius: 12px; font-weight: 600; font-size: 14px; transition: all 0.2s; color: #64748b; }
-        .tab-active { background: #ffffff; color: #4f46e5; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        table.dataTable tbody td { padding: 14px 12px; vertical-align: middle; }
+        table.dataTable.no-footer { border-bottom: none !important; }
+        .dataTables_filter input { padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; margin-right: 8px; font-family: inherit; }
+        .tab-btn { border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
     </style>
 </head>
-<body class="antialiased selection:bg-indigo-100 selection:text-indigo-900">
+<body class="antialiased lg:pb-8">
 
-    <!-- Navbar -->
-    <header class="bg-white/70 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-40">
-        <div class="max-w-[1400px] mx-auto px-6 h-20 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="h-10 w-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="h-8 w-8 bg-blue-600 rounded flex items-center justify-center">
+                    <i class="ph-bold ph-hard-drives text-white text-lg"></i>
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold text-slate-800 tracking-tight leading-none">NEXUS</h1>
-                    <span class="text-xs text-slate-400 font-medium mt-1 inline-block">Enterprise Extractor</span>
-                </div>
+                <h1 class="text-lg font-bold text-slate-800">داشبورد مدیریت دیتابیس</h1>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:flex items-center gap-2 text-sm font-mono text-slate-500 bg-slate-100/80 px-4 py-2 rounded-xl border border-slate-200/60">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span id="clock">00:00</span>
-                </div>
-                <a href="/logout" class="text-sm font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-5 py-2.5 rounded-xl transition-colors">خروج سیستم</a>
-            </div>
+            <a href="/logout" class="text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-1.5 rounded transition-colors">خروج</a>
         </div>
     </header>
 
-    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         
-        <!-- KPI Metrics -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="glass-card p-6 relative overflow-hidden group">
-                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><svg class="w-16 h-16 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path></svg></div>
-                <p class="text-sm font-semibold text-slate-400 mb-2 relative z-10">مجموع استخراج (خام)</p>
-                <div class="text-4xl font-black text-slate-800 relative z-10" id="stat-total">0</div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="clean-card p-5">
+                <p class="text-sm font-semibold text-slate-500 mb-2">لیست خام</p>
+                <div class="text-2xl font-bold text-slate-800" id="stat-total">0</div>
             </div>
-            
-            <div class="glass-card p-6 relative overflow-hidden group border-amber-100 bg-amber-50/30">
-                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><svg class="w-16 h-16 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg></div>
-                <p class="text-sm font-semibold text-amber-600/80 mb-2 relative z-10">اکانت‌های VIP (خریددار)</p>
-                <div class="text-4xl font-black text-amber-500 relative z-10" id="stat-ordered">0</div>
+            <div class="clean-card p-5">
+                <p class="text-sm font-semibold text-emerald-600 mb-2">دارای خرید</p>
+                <div class="text-2xl font-bold text-emerald-600" id="stat-ordered">0</div>
             </div>
-
-            <div class="glass-card p-6 relative overflow-hidden group">
-                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><svg class="w-16 h-16 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zm7-10a1 1 0 01.707.293l0 .001 5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L15.586 8l-4.293-4.293A1 1 0 0112 2z" clip-rule="evenodd"></path></svg></div>
-                <p class="text-sm font-semibold text-slate-400 mb-2 relative z-10">پروکسی‌های متصل</p>
-                <div class="text-4xl font-black text-slate-800 relative z-10 tracking-tight" id="stat-proxies">...</div>
+            <div class="clean-card p-5">
+                <p class="text-sm font-semibold text-slate-500 mb-2">پروکسی لوکال</p>
+                <div class="text-xl font-bold text-slate-800" id="stat-proxies">بررسی...</div>
             </div>
-
-            <div class="glass-card p-6 flex flex-col justify-center items-center bg-gradient-to-br from-slate-50 to-slate-100/50">
-                <p class="text-sm font-semibold text-slate-400 mb-4">وضعیت موتور محلی</p>
-                <div class="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-slate-100">
-                    <div id="statusDot" class="h-3 w-3 rounded-full bg-slate-300"></div>
-                    <span id="statusText" class="text-sm font-bold text-slate-600">آفلاین</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Middle Workspace -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-10">
-            <!-- Sidebar Controls -->
-            <div class="hidden lg:flex lg:col-span-1 flex-col gap-5">
-                <div class="glass-card p-6">
-                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-5">کنترل پنل عملیات</h3>
-                    
-                    <button onclick="triggerAction('start')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-2xl mb-4 shadow-lg shadow-slate-200 transition-all hover:-translate-y-0.5">
-                        شروع ثبت‌نام انبوه
-                    </button>
-                    
-                    <button onclick="triggerAction('check_orders')" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-bold py-3.5 rounded-2xl mb-4 shadow-lg shadow-amber-200 transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        چک کردن خریدها
-                    </button>
-                    
-                    <button onclick="triggerAction('stop')" class="w-full bg-white border-2 border-rose-100 text-rose-500 hover:bg-rose-50 font-bold py-3.5 rounded-2xl transition-colors">
-                        توقف اضطراری
-                    </button>
-                </div>
-
-                <div class="flex gap-4">
-                    <button onclick="openExportModal()" class="flex-1 glass-card bg-indigo-50/50 hover:bg-indigo-50 border-indigo-100 text-indigo-600 font-bold py-4 text-sm transition-all hover:-translate-y-0.5">دریافت خروجی</button>
-                    <button onclick="openWipeModal()" class="flex-1 glass-card bg-rose-50/50 hover:bg-rose-50 border-rose-100 text-rose-600 font-bold py-4 text-sm transition-all hover:-translate-y-0.5">فلش سرور</button>
-                </div>
-            </div>
-
-            <!-- Modern Mac Terminal -->
-            <div class="col-span-1 lg:col-span-3 mac-terminal">
-                <div class="mac-header">
-                    <div class="mac-dots">
-                        <div class="mac-dot bg-rose-500"></div>
-                        <div class="mac-dot bg-amber-400"></div>
-                        <div class="mac-dot bg-emerald-500"></div>
-                    </div>
-                    <div class="mx-auto text-xs font-mono text-slate-400 tracking-wider">bridge-worker.py — Nexus Engine</div>
-                </div>
-                <div class="terminal-body" id="terminalOutput"></div>
-            </div>
-        </div>
-
-        <!-- Database Table Area -->
-        <div class="glass-card p-6 lg:p-8 mb-24 lg:mb-0">
-            <!-- Header & Segmented Tabs -->
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 border-b border-slate-100 pb-6">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800 mb-1">دیتابیس استخراج</h2>
-                    <p class="text-sm text-slate-400">مدیریت و فیلتر توکن‌های امن تولید شده</p>
-                </div>
-                
-                <!-- Mac-style Segmented Control -->
-                <div class="bg-slate-100 p-1.5 rounded-2xl inline-flex w-full sm:w-auto">
-                    <button onclick="switchTab('normal')" id="tab-normal" class="tab-btn tab-active flex-1 sm:flex-none text-center">اکانت‌های خام</button>
-                    <button onclick="switchTab('ordered')" id="tab-ordered" class="tab-btn flex-1 sm:flex-none text-center flex justify-center items-center gap-1.5"><span class="text-amber-500">★</span> اکانت‌های طلایی</button>
-                </div>
-            </div>
-
-            <!-- Date Filter Tools -->
-            <div class="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl flex flex-wrap items-center gap-4 mb-8">
+            <div class="clean-card p-5 flex flex-col justify-center">
+                <p class="text-sm font-semibold text-slate-500 mb-2">وضعیت سیستم بیگی</p>
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg></div>
-                    <span class="text-sm font-bold text-slate-600">فیلتر زمانی:</span>
+                    <div id="statusDot" class="h-2.5 w-2.5 rounded-full bg-slate-300"></div>
+                    <span id="statusText" class="text-sm font-bold text-slate-600">قطع ارتباط</span>
                 </div>
-                <div class="flex items-center gap-2 text-sm bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
-                    <span class="text-slate-400">از</span>
-                    <input type="datetime-local" id="filterStart" class="bg-transparent outline-none text-slate-700 font-mono">
-                </div>
-                <div class="flex items-center gap-2 text-sm bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
-                    <span class="text-slate-400">تا</span>
-                    <input type="datetime-local" id="filterEnd" class="bg-transparent outline-none text-slate-700 font-mono">
-                </div>
-                <button onclick="resetDateFilter()" class="bg-slate-200/50 hover:bg-slate-200 text-slate-600 text-sm font-bold px-4 py-2.5 rounded-xl transition-colors w-full sm:w-auto">پاک کردن فیلتر</button>
-            </div>
-
-            <!-- Tables -->
-            <div id="wrap-normal" class="overflow-x-auto pb-4">
-                <table id="normalTable" class="display nowrap w-full">
-                    <thead><tr><th>شماره موبایل</th><th>نام و نام‌خانوادگی</th><th>تاریخ پردازش</th><th>لینک یک‌بارمصرف امن</th><th>حذف</th></tr></thead><tbody></tbody>
-                </table>
-            </div>
-
-            <div id="wrap-ordered" class="overflow-x-auto pb-4 hidden">
-                <table id="orderedTable" class="display nowrap w-full">
-                    <thead><tr><th>شماره موبایل</th><th>نام و نام‌خانوادگی</th><th>تاریخ پردازش</th><th>آمار خرید</th><th>لینک یک‌بارمصرف امن</th><th>حذف</th></tr></thead><tbody></tbody>
-                </table>
             </div>
         </div>
-    </div>
 
-    <!-- Mobile Bottom App Bar -->
-    <div class="lg:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-50 px-4 py-4 flex gap-3 pb-safe">
-        <button onclick="triggerAction('start')" class="flex-1 bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-sm shadow-md shadow-slate-300">استارت</button>
-        <button onclick="triggerAction('check_orders')" class="flex-1 bg-amber-500 text-white font-bold py-3.5 rounded-2xl text-sm shadow-md shadow-amber-200 flex justify-center items-center gap-1"><span class="text-lg leading-none mb-1">★</span> چکر</button>
-        <button onclick="openExportModal()" class="w-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-bold shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>
-        <button onclick="triggerAction('stop')" class="w-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center font-bold shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path></svg></button>
-    </div>
-
-    <!-- Export Modal -->
-    <div id="exportModal" class="fixed inset-0 z-[60] hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 opacity-0 transition-opacity duration-300" style="opacity: 1;">
-        <div class="bg-white rounded-[24px] w-full max-w-sm p-8 shadow-2xl transform scale-95 transition-transform duration-300" id="exportModalBox">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-black text-xl text-slate-800 tracking-tight">ماژول خروجی</h3>
-                <button onclick="closeExportModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">&times;</button>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+            <div class="hidden lg:flex lg:col-span-1 flex-col gap-4">
+                <div class="clean-card p-5">
+                    <button onclick="triggerAction('start')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded mb-2 transition-colors flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-play"></i> استارت ثبت‌نام بیگی
+                    </button>
+                    <button onclick="openCustomProxyModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded mb-2 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                        <i class="ph-bold ph-shield-check"></i> چک با پروکسی من
+                    </button>
+                    <button onclick="triggerAction('stop')" class="w-full bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold py-3 rounded mb-4 transition-colors">
+                        توقف عملیات
+                    </button>
+                    <div class="grid grid-cols-2 gap-2 pt-4 border-t border-slate-100">
+                        <button onclick="openExportModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold py-2 rounded text-sm transition-colors">خروجی</button>
+                        <button onclick="openWipeModal()" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-2 rounded text-sm transition-colors">حذف کل</button>
+                    </div>
+                </div>
             </div>
-            <p class="text-xs font-bold text-indigo-500 bg-indigo-50 inline-block px-3 py-1.5 rounded-lg mb-6">دیتابیس فعال: <span id="exportTabName">خام (عادی)</span></p>
+            <div class="col-span-1 lg:col-span-3 clean-card overflow-hidden">
+                <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-600">ترمینال گزارشات و لاگ</span>
+                </div>
+                <div class="terminal-box p-4 text-sm" id="terminalOutput"></div>
+            </div>
+        </div>
+
+        <div class="clean-card p-5 mb-20 lg:mb-0">
+            <div class="flex gap-6 mb-5 border-b border-slate-200">
+                <button onclick="switchTab('normal')" id="tab-normal" class="tab-btn active pb-3 font-bold text-sm text-slate-500 hover:text-slate-800 transition-colors">لیست خام</button>
+                <button onclick="switchTab('ordered')" id="tab-ordered" class="tab-btn pb-3 font-bold text-sm text-slate-500 hover:text-slate-800 transition-colors">دارای خرید</button>
+            </div>
             
-            <div class="flex flex-col gap-3">
-                <button onclick="exportData('raw_links')" class="text-right p-4 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 transition-all group">
-                    <div class="font-bold text-sm text-slate-700 group-hover:text-indigo-600 transition-colors">لینک‌های خام (TXT)</div>
-                    <div class="text-xs text-slate-400 mt-1 font-mono">https://...</div>
-                </button>
-                <button onclick="exportData('links_phone')" class="text-right p-4 rounded-2xl border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 transition-all group">
-                    <div class="font-bold text-sm text-slate-700 group-hover:text-emerald-600 transition-colors">شماره + لینک (TXT)</div>
-                    <div class="text-xs text-slate-400 mt-1 font-mono">0912... - https://...</div>
-                </button>
-                <button onclick="exportData('numbered_links')" class="text-right p-4 rounded-2xl border border-slate-200 hover:border-violet-400 hover:bg-violet-50/50 transition-all group">
-                    <div class="font-bold text-sm text-slate-700 group-hover:text-violet-600 transition-colors">لیست شماره‌دار (TXT)</div>
-                    <div class="text-xs text-slate-400 mt-1 font-mono">1. https://...</div>
-                </button>
-                <button onclick="exportData('json')" class="text-right p-4 rounded-2xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50/50 transition-all group">
-                    <div class="font-bold text-sm text-slate-700 group-hover:text-amber-600 transition-colors">فول بکاپ سرور (JSON)</div>
-                    <div class="text-xs text-slate-400 mt-1 font-mono">{ "data": [...] }</div>
-                </button>
+            <div class="flex items-center gap-2 bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-4 w-max">
+                <span class="text-slate-600 font-medium ml-1">تاریخ:</span>
+                <input type="datetime-local" id="filterStart" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none text-slate-700">
+                <span class="text-slate-400">تا</span>
+                <input type="datetime-local" id="filterEnd" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none text-slate-700">
+                <button onclick="resetDateFilter()" class="bg-slate-200 px-3 py-1.5 rounded text-slate-600 hover:bg-slate-300 text-xs font-bold transition-colors">حذف فیلتر</button>
+            </div>
+
+            <div id="wrap-normal" class="overflow-x-auto">
+                <table id="normalTable" class="display nowrap w-full">
+                    <thead><tr><th>موبایل</th><th>پروفایل</th><th>تاریخ ثبت</th><th>لینک ورود</th><th>عملیات</th></tr></thead><tbody></tbody>
+                </table>
+            </div>
+
+            <div id="wrap-ordered" class="overflow-x-auto hidden">
+                <table id="orderedTable" class="display nowrap w-full">
+                    <thead><tr><th>موبایل</th><th>پروفایل</th><th>تاریخ ثبت</th><th>وضعیت خرید</th><th>لینک ورود</th><th>عملیات</th></tr></thead><tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Wipe Modal -->
-    <div id="wipeModal" class="fixed inset-0 z-[60] hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-white rounded-[24px] w-full max-w-sm p-8 text-center shadow-2xl relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1.5 bg-rose-500"></div>
-            <div class="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 mx-auto mb-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <div class="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-40 px-4 py-2 flex gap-2 pb-safe shadow">
+        <button onclick="triggerAction('start')" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-play text-base"></i>ثبت‌نام</button>
+        <button onclick="openCustomProxyModal()" class="flex-1 bg-emerald-600 text-white font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-shield-check text-base"></i>چکر من</button>
+        <button onclick="openExportModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-download-simple text-base"></i>خروجی</button>
+        <button onclick="triggerAction('stop')" class="flex-1 bg-white border border-slate-300 text-slate-600 font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-stop text-base"></i>توقف</button>
+    </div>
+
+    <div id="customProxyModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><i class="ph-bold ph-shield-check text-emerald-600"></i> چکر با پروکسی شخصی</h3>
+                <button onclick="closeCustomProxyModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button>
             </div>
-            <h3 class="font-black text-xl text-slate-800 mb-2">فرمت دیتابیس</h3>
-            <p class="text-sm text-slate-500 mb-6 leading-relaxed">این عملیات غیرقابل بازگشت است. برای تایید، عبارت <span class="font-mono font-bold text-rose-500 bg-rose-50 px-1 rounded">NEXUS-WIPE-ALL</span> را وارد کنید.</p>
-            <input type="text" id="wipeConfirmInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center mb-6 font-mono text-sm outline-none focus:border-rose-400 focus:bg-white transition-colors" placeholder="NEXUS-WIPE-ALL">
-            <div class="flex gap-3">
-                <button onclick="closeWipeModal()" class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">لغو عملیات</button>
-                <button onclick="confirmWipe()" class="flex-1 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold shadow-md shadow-rose-200 transition-colors">فرمت سرور</button>
+            <p class="text-xs text-slate-500 mb-3 leading-relaxed">
+                لیست پروکسی‌های خود را خط‌به‌خط وارد کنید. نیازی به روشن بودن سیستم آقای بیگی نیست.<br>
+                فرمت‌های پشتیبانی شده: <code class="bg-slate-100 px-1 rounded text-slate-700">ip:port:user:pass</code> یا <code class="bg-slate-100 px-1 rounded text-slate-700">http://user:pass@ip:port</code>
+            </p>
+            <textarea id="customProxiesInput" class="w-full h-44 border border-slate-300 rounded-lg p-3 text-xs font-mono outline-none focus:border-emerald-500 mb-4" placeholder="192.168.1.1:8080:username:password&#10;192.168.1.2:8080:username:password" dir="ltr"></textarea>
+            <div class="flex gap-2">
+                <button onclick="closeCustomProxyModal()" class="flex-1 py-2.5 rounded-lg bg-slate-100 text-slate-600 font-bold text-sm">لغو</button>
+                <button onclick="submitCustomChecker()" class="flex-1 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow">شروع بررسی خریدها</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="exportModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg w-full max-w-sm p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-5"><h3 class="font-bold text-lg text-slate-800">استخراج داده‌ها</h3><button onclick="closeExportModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button></div>
+            <div class="flex flex-col gap-2">
+                <button onclick="exportData('raw_links')" class="text-right p-3 rounded border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700">۱. لینک‌های خام (TXT)</button>
+                <button onclick="exportData('links_phone')" class="text-right p-3 rounded border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700">۲. لینک + شماره (TXT)</button>
+                <button onclick="exportData('numbered_links')" class="text-right p-3 rounded border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700">۳. لیست شماره‌دار (TXT)</button>
+                <button onclick="exportData('json')" class="text-right p-3 rounded border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700">۴. خروجی کامل (JSON)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="wipeModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg w-full max-w-sm p-6 text-center shadow-xl border-t-4 border-red-500">
+            <h3 class="font-bold text-lg text-slate-900 mb-2">پاکسازی دیتابیس</h3>
+            <p class="text-sm text-slate-500 mb-4">جهت حذف کل رکوردها کلمه <span class="font-mono text-red-600 font-bold">NEXUS-WIPE-ALL</span> را بنویسید.</p>
+            <input type="text" id="wipeConfirmInput" class="w-full border border-slate-300 rounded px-3 py-2 text-center mb-4 font-mono outline-none focus:border-red-500">
+            <div class="flex gap-2">
+                <button onclick="closeWipeModal()" class="flex-1 py-2 rounded bg-slate-100 text-slate-600 font-bold">انصراف</button>
+                <button onclick="confirmWipe()" class="flex-1 py-2 rounded bg-red-600 text-white font-bold">حذف اطلاعات</button>
             </div>
         </div>
     </div>
@@ -262,109 +171,60 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <script>
-        // Clock
-        setInterval(() => { const c = document.getElementById('clock'); if(c) c.innerText = new Date().toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'}); }, 1000);
+        let currentTab = 'normal', tNormal, tOrdered;
 
-        let currentTab = 'normal';
-        let tNormal, tOrdered;
-
-        // Custom Date Filtering
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            const minStr = document.getElementById('filterStart').value;
-            const maxStr = document.getElementById('filterEnd').value;
-            const rowDateStr = data[2];
-            if (!minStr && !maxStr) return true;
-            if (!rowDateStr) return false;
-            const rowDate = new Date(rowDateStr.replace(' ', 'T')).getTime();
-            const min = minStr ? new Date(minStr).getTime() : null;
-            const max = maxStr ? new Date(maxStr).getTime() : null;
-            if (min && rowDate < min) return false;
-            if (max && rowDate > max) return false;
-            return true;
+            const min = document.getElementById('filterStart').value ? new Date(document.getElementById('filterStart').value).getTime() : null;
+            const max = document.getElementById('filterEnd').value ? new Date(document.getElementById('filterEnd').value).getTime() : null;
+            if(!min && !max) return true;
+            const rowDate = data[2] ? new Date(data[2].replace(' ', 'T')).getTime() : null;
+            return !(rowDate && ((min && rowDate < min) || (max && rowDate > max)));
         });
 
         $(document).ready(function() {
-            const tableOptions = {
-                language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" },
-                order: [[2, 'desc']],
-                pageLength: 8,
-                lengthChange: false
-            };
-
-            tNormal = $('#normalTable').DataTable({
-                ...tableOptions,
+            const opts = { language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" }, pageLength: 10, order: [[2, 'desc']] };
+            
+            tNormal = $('#normalTable').DataTable({ ...opts,
                 columns: [
-                    { data: 'phone', render: d => `<span class="font-mono font-medium tracking-wide text-slate-800">${d}</span>` },
-                    { data: 'name', render: d => `<span class="font-bold text-slate-700">${d}</span>` },
-                    { data: 'created_at', render: d => `<span class="font-mono text-[13px] text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${d}</span>` },
-                    { data: 'link', render: d => `<div class="flex items-center gap-2"><input type="text" readonly value="${d}" class="text-[13px] font-mono bg-white border border-slate-200 rounded-lg px-3 py-1.5 w-24 sm:w-40 outline-none focus:border-indigo-400 transition-colors"><button onclick="navigator.clipboard.writeText('${d}')" class="text-indigo-600 text-xs font-black bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">کپی</button></div>` },
-                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-rose-500 hover:text-rose-700 transition-colors bg-rose-50 hover:bg-rose-100 p-1.5 rounded-lg flex"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` }
-                ],
-                ajax: { url: '/api/accounts/normal', dataSrc: 'data' }
+                    { data: 'phone', render: d => `<span class="font-mono font-semibold">${d}</span>` },
+                    { data: 'name', render: d => `<span>${d}</span>` },
+                    { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
+                    { data: 'link', render: d => `<div class="flex items-center gap-1"><input type="text" readonly value="${d}" class="text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1 w-24 sm:w-32 outline-none cursor-pointer" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs font-bold">کپی</button></div>` },
+                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-red-500 text-lg"><i class="ph-bold ph-trash"></i></button>` }
+                ], ajax: { url: '/api/accounts/normal', dataSrc: 'data' }
             });
 
-            tOrdered = $('#orderedTable').DataTable({
-                ...tableOptions,
+            tOrdered = $('#orderedTable').DataTable({ ...opts,
                 columns: [
-                    { data: 'phone', render: d => `<span class="font-mono font-medium tracking-wide text-slate-800">${d}</span>` },
-                    { data: 'name', render: d => `<span class="font-bold text-slate-700">${d}</span>` },
-                    { data: 'created_at', render: d => `<span class="font-mono text-[13px] text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${d}</span>` },
-                    { data: 'total_orders', render: d => `<span class="bg-amber-100 text-amber-700 font-black text-[13px] px-3 py-1.5 rounded-xl shadow-sm border border-amber-200/50 flex items-center gap-1.5 w-max"><span>${d}</span> <span>سفارش</span></span>` },
-                    { data: 'link', render: d => `<div class="flex items-center gap-2"><input type="text" readonly value="${d}" class="text-[13px] font-mono bg-white border border-slate-200 rounded-lg px-3 py-1.5 w-24 sm:w-40 outline-none focus:border-indigo-400 transition-colors"><button onclick="navigator.clipboard.writeText('${d}')" class="text-indigo-600 text-xs font-black bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">کپی</button></div>` },
-                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-rose-500 hover:text-rose-700 transition-colors bg-rose-50 hover:bg-rose-100 p-1.5 rounded-lg flex"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` }
-                ],
-                ajax: { url: '/api/accounts/ordered', dataSrc: 'data' }
+                    { data: 'phone', render: d => `<span class="font-mono font-semibold">${d}</span>` },
+                    { data: 'name', render: d => `<span>${d}</span>` },
+                    { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
+                    { data: 'total_orders', render: d => `<span class="bg-emerald-100 text-emerald-700 font-bold text-xs px-2 py-1 rounded">بله (${d} سفارش)</span>` },
+                    { data: 'link', render: d => `<div class="flex items-center gap-1"><input type="text" readonly value="${d}" class="text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1 w-24 sm:w-32 outline-none cursor-pointer" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs font-bold">کپی</button></div>` },
+                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-red-500 text-lg"><i class="ph-bold ph-trash"></i></button>` }
+                ], ajax: { url: '/api/accounts/ordered', dataSrc: 'data' }
             });
-
             $('#filterStart, #filterEnd').on('change', () => { tNormal.draw(); tOrdered.draw(); });
         });
 
         function switchTab(tab) {
             currentTab = tab;
-            document.getElementById('exportTabName').innerText = tab === 'normal' ? 'خام (عادی)' : 'خریددار (VIP)';
-            
-            const btnNormal = document.getElementById('tab-normal');
-            const btnOrdered = document.getElementById('tab-ordered');
-
-            if (tab === 'normal') {
-                $('#wrap-normal').show(); $('#wrap-ordered').hide();
-                btnNormal.className = 'tab-btn tab-active flex-1 sm:flex-none text-center';
-                btnOrdered.className = 'tab-btn flex-1 sm:flex-none text-center flex justify-center items-center gap-1.5';
-            } else {
-                $('#wrap-normal').hide(); $('#wrap-ordered').show();
-                btnOrdered.className = 'tab-btn tab-active flex-1 sm:flex-none text-center flex justify-center items-center gap-1.5';
-                btnNormal.className = 'tab-btn flex-1 sm:flex-none text-center';
-            }
+            $('.tab-btn').removeClass('active').addClass('text-slate-500');$(`#tab-${tab}`).addClass('active').removeClass('text-slate-500');
+            if (tab === 'normal') { $('#wrap-normal').show(); $('#wrap-ordered').hide(); } 
+            else { $('#wrap-normal').hide(); $('#wrap-ordered').show(); }
         }
 
         function resetDateFilter() { document.getElementById('filterStart').value = ''; document.getElementById('filterEnd').value = ''; tNormal.draw(); tOrdered.draw(); }
 
-        // Live Telemetry
         function fetchStats() {
             fetch('/api/stats').then(res => res.json()).then(data => {
-                document.getElementById('stat-total').innerText = data.total_accounts.toLocaleString('en-US');
-                document.getElementById('stat-ordered').innerText = data.ordered_accounts.toLocaleString('en-US');
-                
-                const proxyEl = document.getElementById('stat-proxies');
-                if(data.active_proxies === null) { 
-                    proxyEl.innerText = "ارتباط قطع"; 
-                    proxyEl.className = "text-xl font-black text-rose-500 relative z-10 tracking-tight mt-1"; 
-                } else { 
-                    proxyEl.innerText = data.active_proxies; 
-                    proxyEl.className = "text-4xl font-black text-slate-800 relative z-10 tracking-tight"; 
-                }
+                document.getElementById('stat-total').innerText = data.total_accounts;
+                document.getElementById('stat-ordered').innerText = data.ordered_accounts;
+                document.getElementById('stat-proxies').innerText = data.active_proxies === null ? "قطع" : data.active_proxies;
 
                 const sDot = document.getElementById('statusDot'), sTxt = document.getElementById('statusText');
-                if (data.system_status === 'Registering') { 
-                    sDot.className = 'h-3 w-3 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.6)]'; 
-                    sTxt.innerText = 'در حال ثبت‌نام...'; sTxt.className = 'text-sm font-black text-indigo-600'; 
-                } else if (data.system_status === 'Checking') { 
-                    sDot.className = 'h-3 w-3 rounded-full bg-amber-400 animate-pulse shadow-[0_0_10px_rgba(251,191,36,0.6)]'; 
-                    sTxt.innerText = 'چک کردن خرید...'; sTxt.className = 'text-sm font-black text-amber-500'; 
-                } else { 
-                    sDot.className = 'h-3 w-3 rounded-full bg-slate-300'; 
-                    sTxt.innerText = 'آماده‌باش (Standby)'; sTxt.className = 'text-sm font-bold text-slate-500'; 
-                }
+                if (data.system_status === 'Registering') { sDot.className = 'h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse'; sTxt.innerText = 'ثبت‌نام لوکال'; } 
+                else { sDot.className = 'h-2.5 w-2.5 rounded-full bg-slate-300'; sTxt.innerText = 'آماده‌باش'; }
             });
         }
 
@@ -374,59 +234,60 @@
                 const logsStr = JSON.stringify(data.logs);
                 if (logsStr !== lastLogs) {
                     const out = document.getElementById('terminalOutput'); out.innerHTML = '';
-                    if(data.logs.length === 0) { out.innerHTML = '<span class="text-slate-600">-- No recent logs from bridge worker --</span>'; }
+                    if(data.logs.length === 0) out.innerHTML = '<span class="text-slate-500">منتظر دریافت لاگ...</span>';
                     data.logs.forEach(l => { 
-                        const div = document.createElement('div'); div.className = 'mb-1 flex gap-3'; 
-                        let color = l.message.includes('❌') || l.message.includes('⛔') ? 'text-rose-400' : (l.message.includes('⭐') || l.message.includes('🔎') || l.message.includes('🎯') ? 'text-amber-400 font-bold' : 'text-emerald-400');
-                        div.innerHTML = `<span class="text-slate-600 shrink-0 select-none">[${l.timestamp}]</span> <span class="${color} break-words">${l.message}</span>`; 
+                        const div = document.createElement('div'); div.className = 'mb-1'; 
+                        let color = l.message.includes('❌') || l.message.includes('error') ? 'text-rose-400' : 'text-emerald-400';
+                        div.innerHTML = `<span class="text-slate-500">[${l.timestamp}] ></span> <span class="${color}">${l.message}</span>`; 
                         out.appendChild(div); 
                     });
                     out.scrollTop = out.scrollHeight; lastLogs = logsStr;
+                    tNormal.ajax.reload(null, false);
+                    tOrdered.ajax.reload(null, false);
                 }
             });
         }
         setInterval(fetchStats, 3000); setInterval(fetchLogs, 3000); fetchStats(); fetchLogs();
 
-        // Actions
-        function triggerAction(action) { fetch(`/api/action/${action}`, { method: 'POST' }).then(res => res.json()).then(data => { fetchStats(); }); }
+        function triggerAction(action) { fetch(`/api/action/${action}`, { method: 'POST' }).then(() => fetchStats()); }
+        function deleteAccount(phone) { if(confirm('رکورد حذف شود؟')) { fetch('/api/action/delete_account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({phone: phone}) }).then(() => { tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); }); } }
         
-        function deleteAccount(phone) { 
-            if(confirm('این رکورد حذف و خط آزاد خواهد شد. مطمئن هستید؟')) { 
-                fetch('/api/action/delete_account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({phone: phone}) })
-                .then(() => { tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); fetchStats(); }); 
-            } 
+        // Custom Proxy Modal
+        function openCustomProxyModal() { document.getElementById('customProxyModal').classList.remove('hidden'); }
+        function closeCustomProxyModal() { document.getElementById('customProxyModal').classList.add('hidden'); }
+        function submitCustomChecker() {
+            const text = document.getElementById('customProxiesInput').value;
+            if(!text.trim()) return alert('لطفاً حداقل یک پروکسی وارد کنید.');
+            fetch('/api/custom_checker', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ proxies: text })
+            }).then(res => res.json()).then(data => {
+                alert(data.message);
+                closeCustomProxyModal();
+            });
         }
-        
-        function openWipeModal() { document.getElementById('wipeConfirmInput').value = ''; document.getElementById('wipeModal').classList.remove('hidden'); document.getElementById('wipeModal').style.display = 'flex'; }
-        function closeWipeModal() { document.getElementById('wipeModal').classList.add('hidden'); document.getElementById('wipeModal').style.display = 'none'; }
+
+        function openWipeModal() { document.getElementById('wipeConfirmInput').value = ''; document.getElementById('wipeModal').classList.remove('hidden'); }
+        function closeWipeModal() { document.getElementById('wipeModal').classList.add('hidden'); }
         function confirmWipe() {
-            const code = document.getElementById('wipeConfirmInput').value;
-            fetch('/api/action/clean', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({code: code}) })
+            fetch('/api/action/clean', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({code: document.getElementById('wipeConfirmInput').value}) })
             .then(res => res.json()).then(data => { alert(data.message); closeWipeModal(); tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); fetchStats(); });
         }
 
-        function openExportModal() { 
-            document.getElementById('exportModal').classList.remove('hidden'); 
-            document.getElementById('exportModal').style.display = 'flex'; 
-            setTimeout(() => document.getElementById('exportModalBox').classList.replace('scale-95', 'scale-100'), 10);
-        }
-        function closeExportModal() { 
-            document.getElementById('exportModalBox').classList.replace('scale-100', 'scale-95');
-            setTimeout(() => { document.getElementById('exportModal').classList.add('hidden'); document.getElementById('exportModal').style.display = 'none'; }, 300);
-        }
+        function openExportModal() { document.getElementById('exportModal').classList.remove('hidden'); }
+        function closeExportModal() { document.getElementById('exportModal').classList.add('hidden'); }
         function exportData(type) {
             const activeTable = currentTab === 'normal' ? tNormal : tOrdered;
             const rows = activeTable.rows({ search: 'applied' }).data().toArray();
-            if (rows.length === 0) { alert('هیچ رکوردی در جدول یافت نشد.'); return; }
-            let content = "", name = `Nexus_${currentTab}_${type}_${new Date().toISOString().slice(0,10)}`, mime = "text/plain;charset=utf-8";
-            
-            if (type === 'raw_links') { content = rows.map(r => r.link).join('\n'); name += ".txt"; } 
-            else if (type === 'links_phone') { content = rows.map(r => `شماره: ${r.phone} - لینک: ${r.link}`).join('\n'); name += ".txt"; } 
-            else if (type === 'numbered_links') { content = rows.map((r, i) => `${i + 1}. ${r.link}`).join('\n'); name += ".txt"; } 
-            else if (type === 'json') { content = JSON.stringify(rows, null, 2); name += ".json"; mime = "application/json;charset=utf-8"; }
-            
+            if (rows.length === 0) return alert('داده‌ای وجود ندارد.');
+            let content = "", name = `Export_${currentTab}_${type}.txt`, mime = "text/plain;charset=utf-8";
+            if (type === 'raw_links') content = rows.map(r => r.link).join('\n');
+            else if (type === 'links_phone') content = rows.map(r => `${r.phone} - ${r.link}`).join('\n');
+            else if (type === 'numbered_links') content = rows.map((r, i) => `${i + 1}. ${r.link}`).join('\n');
+            else if (type === 'json') { content = JSON.stringify(rows, null, 2); name = `Export_${currentTab}.json`; mime = "application/json;charset=utf-8"; }
             const blob = new Blob([content], { type: mime }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; link.click(); closeExportModal();
         }
     </script>
 </body>
-                </html>
+</html>
