@@ -1,7 +1,7 @@
 """
-Nexus Extractor Engine - Advanced Cloud Panel with Detailed Diagnostic Logs
+Nexus Extractor Engine - Fixed Checker Backend
 """
-import os, json, secrets, threading, time
+import os, json, secrets, threading, time, uuid, urllib.parse
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import Flask, render_template_string, render_template, jsonify, request, session, redirect, url_for, Response
@@ -28,7 +28,7 @@ def log_checker_event(msg):
     if db:
         try:
             db.rpush("nexus:checker_logs", line)
-            db.ltrim("nexus:checker_logs", -3000, -1)  # نگه‌داری ۳۰۰۰ لاگ آخر
+            db.ltrim("nexus:checker_logs", -3000, -1)
         except Exception:
             pass
 
@@ -63,93 +63,137 @@ threading.Thread(target=token_worker, daemon=True).start()
 def format_proxy(raw_p):
     raw_p = raw_p.strip()
     if not raw_p: return None
-    if raw_p.startswith("http://") or raw_p.startswith("https://"):
+    if raw_p.startswith("http://") or raw_p.startswith("https://") or raw_p.startswith("socks5://"):
         return raw_p
     parts = raw_p.split(":")
     if len(parts) == 4:
         ip, port, user, pwd = parts
-        return f"http://{user}:{pwd}@{ip}:{port}"
+        u_enc = urllib.parse.quote(user)
+        p_enc = urllib.parse.quote(pwd)
+        return f"http://{u_enc}:{p_enc}@{ip}:{port}"
     elif len(parts) == 2:
         return f"http://{raw_p}"
     return None
 
+def extract_dk_token(phone, acc_data):
+    """استخراج چندمرحله‌ای توکن دیجی‌کالا از سشن یا دیتابیس"""
+    if acc_data.get("dk_token"): return acc_data["dk_token"]
+    nexus_token = acc_data.get("token")
+    if not nexus_token: return None
+    
+    session_raw = db.get(f"jet_session:{nexus_token}")
+    if not session_raw: return None
+    
+    try:
+        s_data = json.loads(session_raw)
+        # 1. جستجو در کوکی‌ها
+        for c in s_data.get("cookies", []):
+            if c.get("name") == "token" and c.get("value"):
+                return c.get("value")
+        # 2. جستجو در لوکال استوریج DKNow
+        for orig in s_data.get("origins", []):
+            for ls in orig.get("localStorage", []):
+                if ls.get("name") == "persist:DKNow":
+                    p_val = json.loads(ls.get("value", "{}"))
+                    u_val = json.loads(p_val.get("user", "{}"))
+                    if u_val.get("token"): return u_val.get("token")
+    except Exception:
+        pass
+    return None
+
 def check_account_with_proxy(phone, acc_data, proxy_url):
     try:
-        nexus_token = acc_data.get("token")
-        if not nexus_token:
-            log_checker_event(f"❌ شماره {phone} | خطا: توکن نکسوس در دیتابیس یافت نشد.")
-            return False, 0
-
-        session_raw = db.get(f"jet_session:{nexus_token}")
-        if not session_raw:
-            log_checker_event(f"❌ شماره {phone} | خطا: سشن jet_session:{nexus_token} در ردیس یافت نشد (احتمالاً منقضی شده).")
-            return False, 0
-        
-        session_data = json.loads(session_raw)
-        cookies = session_data.get("cookies", [])
-        dk_token = ""
-        for c in cookies:
-            if c.get("name") == "token":
-                dk_token = c.get("value")
-                break
-        
+        dk_token = extract_dk_token(phone, acc_data)
         if not dk_token:
-            log_checker_event(f"❌ شماره {phone} | خطا: کوکی توکن اصلی دیجی‌کالا در نشست وجود ندارد.")
+            log_checker_event(f"❌ شماره {phone} | خطا: توکن نشست در دیتابیس یافت نشد.")
             return False, 0
 
+        # تطبیق دقیق هدرها بر اساس فایل لاگ مرورگر
+        client_fingerprint = "FINGERPRINTV2-" + uuid.uuid4().hex
         headers = {
             "authority": "api.digikalajet.ir",
             "accept": "application/json, text/plain, */*",
+            "accept-language": "en-US,en;q=0.9,fa;q=0.8",
             "app-id": "8b62e987-34bf-48bd-bc62-347f38309a36",
             "authorization": dk_token,
             "client": "mobile",
-            "clientos": "Android"
+            "clientid": client_fingerprint,
+            "clientid-v2": client_fingerprint,
+            "clientos": "Android",
+            "origin": "https://www.digikalajet.com",
+            "platform-sso-disable-prod": "1",  # هدر کلیدی جهت بای‌پس سیستم جدید دیجی‌کالا
+            "referer": "https://www.digikalajet.com/",
+            "sec-ch-ua": '"Chromium";v="137", "Not/A)Brand";v="24"',
+            "sec-ch-ua-mobile": "?1",
+            "sec-ch-ua-platform": '"Android"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36",
+            "x-request-uuid": str(uuid.uuid4())
         }
-        proxies = {"http": proxy_url, "https": proxy_url}
         
-        res = requests.get("https://api.digikalajet.ir/order-shipments/?ch=jj", headers=headers, proxies=proxies, timeout=12)
+        proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+        res = requests.get(
+            "https://api.digikalajet.ir/order-shipments/?ch=jj", 
+            headers=headers, 
+            proxies=proxies, 
+            timeout=15
+        )
         
         if res.status_code == 200:
-            orders = res.json().get("data", {}).get("pager", {}).get("total_items", 0)
-            if orders > 0:
-                acc_data["total_orders"] = orders
+            res_data = res.json().get("data", {})
+            
+            # بررسی تعداد کل سفارشات از بخش پیجر
+            pager_total = res_data.get("pager", {}).get("total_items", 0)
+            
+            # بررسی موازی از روی آرایه‌های سفارشات
+            orders_obj = res_data.get("orders", {})
+            ongoing = orders_obj.get("ongoing", []) if isinstance(orders_obj, dict) else []
+            accomplished = orders_obj.get("accomplished", []) if isinstance(orders_obj, dict) else []
+            list_total = len(ongoing) + len(accomplished)
+            
+            total_orders = max(pager_total, list_total)
+            
+            if total_orders > 0:
+                acc_data["total_orders"] = total_orders
                 db.hset("jet:ordered_accounts", phone, json.dumps(acc_data, ensure_ascii=False))
                 db.hdel("jet:bulk_accounts", phone)
-                log_checker_event(f"✅ شماره {phone} | وضعیت: خریددار ({orders} سفارش) | انتقال یافت.")
-                return True, orders
+                log_checker_event(f"✅ شماره {phone} | خرید تایید شد: {total_orders} سفارش | انتقال یافت.")
+                return True, total_orders
             else:
-                log_checker_event(f"⚪ شماره {phone} | وضعیت: بدون خرید (0 سفارش)")
+                log_checker_event(f"⚪ شماره {phone} | بدون سفارش (خام)")
                 return False, 0
         else:
-            log_checker_event(f"⚠️ شماره {phone} | خطای سرور دیجی‌کالا (کد {res.status_code}) | پاسخ: {res.text[:90]} | پروکسی: {proxy_url}")
+            log_checker_event(f"⚠️ خطای دیجی‌جت برای {phone} | کد: {res.status_code} | متن: {res.text[:80]}")
             return False, 0
 
     except requests.exceptions.ProxyError:
-        log_checker_event(f"🚫 شماره {phone} | خطای پروکسی (ProxyError): اتصال برقرار نشد یا نام کاربری/رمز پروکسی اشتباه است | پروکسی: {proxy_url}")
+        log_checker_event(f"🚫 خطای پروکسی برای {phone} | اتصال برقرار نشد یا یوزر/پسورد غلط است.")
         return False, 0
     except requests.exceptions.Timeout:
-        log_checker_event(f"⏱️ شماره {phone} | تایم‌اوت پروکسی (Timeout): پروکسی پاسخ نداد | پروکسی: {proxy_url}")
+        log_checker_event(f"⏱️ تایم‌اوت برای {phone} | پروکسی در مهلت ۱۵ ثانیه پاسخ نداد.")
         return False, 0
     except Exception as e:
-        log_checker_event(f"❌ شماره {phone} | خطای غیرمنتظره: {str(e)} | پروکسی: {proxy_url}")
+        log_checker_event(f"❌ خطای متفرقه برای {phone} | {str(e)[:60]}")
         return False, 0
 
 def run_cloud_checker_thread(proxy_list):
     valid_proxies = [p for p in [format_proxy(x) for x in proxy_list] if p]
     if not valid_proxies:
-        msg = "❌ خطای چکر: هیچ پروکسی معتبری فرمت نشد. لطفاً فرمت ip:port:user:pass را رعایت کنید."
+        msg = "❌ هیچ پروکسی معتبری وارد نشد. فرمت صحیح: ip:port:user:pass"
         db.rpush("bot:admin_alerts", msg)
         log_checker_event(msg)
         return
 
     accounts = db.hgetall("jet:bulk_accounts")
     if not accounts:
-        msg = "⚠️ چکر: لیست خام خالی است و اکانتی برای بررسی وجود ندارد."
+        msg = "⚠️ لیست خام خالی است. اکانتی برای بررسی وجود ندارد."
         db.rpush("bot:admin_alerts", msg)
         log_checker_event(msg)
         return
 
-    start_msg = f"🔎 شروع چکر با پروکسی شخصی | پروکسی‌ها: {len(valid_proxies)} | اکانت‌ها: {len(accounts)}"
+    start_msg = f"🔎 شروع چکر | تعداد پروکسی: {len(valid_proxies)} | کل اکانت‌ها: {len(accounts)}"
     db.rpush("bot:admin_alerts", start_msg)
     log_checker_event(start_msg)
     
@@ -244,24 +288,13 @@ def start_custom_checker():
     threading.Thread(target=run_cloud_checker_thread, args=(proxy_list,), daemon=True).start()
     return jsonify({"status": "ok", "message": f"چکر ابری با {len(proxy_list)} پروکسی شروع به کار کرد."})
 
-# ایندپوینت جدید برای دانلود فایل متنی لاگ‌های چکر
 @app.route('/api/download_checker_logs')
 def download_checker_logs():
-    if not session.get('logged_in') or not db:
-        return "دسترسی غیرمجاز", 401
-    
+    if not session.get('logged_in') or not db: return "دسترسی غیرمجاز", 401
     raw_logs = db.lrange("nexus:checker_logs", 0, -1)
-    if not raw_logs:
-        content = "هنوز هیچ لاگی از چکر ثبت نشده است. ابتدا عملیات بررسی را اجرا کنید."
-    else:
-        content = "\n".join(raw_logs)
-    
+    content = "\n".join(raw_logs) if raw_logs else "هنوز لاگی ثبت نشده است."
     filename = f"Nexus_Checker_Logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    return Response(
-        content,
-        mimetype="text/plain;charset=utf-8",
-        headers={"Content-Disposition": f"attachment;filename={filename}"}
-    )
+    return Response(content, mimetype="text/plain;charset=utf-8", headers={"Content-Disposition": f"attachment;filename={filename}"})
 
 @app.route('/api/action/<cmd>', methods=['POST'])
 def handle_action(cmd):
@@ -278,7 +311,7 @@ def handle_action(cmd):
         if req.get('code') != 'NEXUS-WIPE-ALL': return jsonify({"status": "error", "message": "کد اشتباه است."})
         db.delete("jet:processed_phones", "jet:bulk_accounts", "jet:ordered_accounts", "bot:admin_alerts", "bot:new_accounts", "nexus:checker_logs")
         for key in db.keys("jet_session:*"): db.delete(key)
-        return jsonify({"status": "ok", "message": "دیتابیس و لاگ‌ها به طور کامل پاک شدند."})
+        return jsonify({"status": "ok", "message": "دیتابیس و لاگ‌ها پاک شدند."})
     return jsonify({"status": "error"})
 
 @app.route('/api/action/delete_account', methods=['POST'])
