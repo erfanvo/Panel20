@@ -1,11 +1,9 @@
 """
-Nexus Extractor Engine - Advanced Cloud Panel with Range & Refresh Token Checker
+Nexus Extractor Engine - Cloud Master Panel
 """
-import os, json, secrets, threading, time, uuid, urllib.parse, re
+import os, json, secrets, threading, time
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from flask import Flask, render_template_string, render_template, jsonify, request, session, redirect, url_for, Response
-import requests
+from flask import Flask, render_template_string, render_template, jsonify, request, session, redirect, url_for
 import redis
 
 app = Flask(__name__)
@@ -21,16 +19,6 @@ try:
     db.ping()
 except Exception:
     db = None
-
-def log_checker_event(msg):
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    line = f"[{now_str}] {msg}"
-    if db:
-        try:
-            db.rpush("nexus:checker_logs", line)
-            db.ltrim("nexus:checker_logs", -4000, -1)
-        except Exception:
-            pass
 
 # ================= Token Worker =================
 def token_worker():
@@ -59,308 +47,7 @@ def token_worker():
 
 threading.Thread(target=token_worker, daemon=True).start()
 
-# ================= Proxy & Session Parsers =================
-def format_proxy(raw_p):
-    raw_p = raw_p.strip()
-    if not raw_p: return None
-    
-    scheme = "http"
-    if "://" in raw_p:
-        scheme, raw_p = raw_p.split("://", 1)
-        scheme = scheme.lower()
-        
-    if "@" in raw_p:
-        part1, part2 = raw_p.rsplit("@", 1)
-        ip_port_pattern = r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|[a-zA-Z0-9\.\-]+):(\d+)$'
-        if re.match(ip_port_pattern, part2):
-            auth_part, host_part = part1, part2
-        else:
-            auth_part, host_part = part2, part1
-            
-        if ":" in auth_part:
-            u, p = auth_part.split(":", 1)
-            return f"{scheme}://{urllib.parse.quote(u)}:{urllib.parse.quote(p)}@{host_part}"
-        return f"{scheme}://{auth_part}@{host_part}"
-        
-    parts = raw_p.split(":")
-    if len(parts) == 4:
-        ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
-        if re.match(ip_pattern, parts[0]) and parts[1].isdigit():
-            ip, port, user, pwd = parts
-        elif re.match(ip_pattern, parts[2]) and parts[3].isdigit():
-            user, pwd, ip, port = parts
-        elif parts[1].isdigit():
-            ip, port, user, pwd = parts
-        else:
-            user, pwd, ip, port = parts
-        return f"{scheme}://{urllib.parse.quote(user)}:{urllib.parse.quote(pwd)}@{ip}:{port}"
-    elif len(parts) == 2:
-        return f"{scheme}://{raw_p}"
-    return None
-
-def get_account_tokens(nexus_token):
-    session_raw = db.get(f"jet_session:{nexus_token}")
-    if not session_raw:
-        return None, None
-    token, refresh_token = None, None
-    try:
-        s_data = json.loads(session_raw)
-        for c in s_data.get("cookies", []):
-            if c.get("name") == "token" and c.get("value"):
-                token = c.get("value")
-        for orig in s_data.get("origins", []):
-            for ls in orig.get("localStorage", []):
-                if ls.get("name") == "persist:DKNow":
-                    p_val = json.loads(ls.get("value", "{}"))
-                    u_val = json.loads(p_val.get("user", "{}"))
-                    if not token:
-                        token = u_val.get("token")
-                    refresh_token = u_val.get("refreshToken")
-    except Exception:
-        pass
-    return token, refresh_token
-
-def update_account_session_token(nexus_token, new_token, new_ref):
-    session_raw = db.get(f"jet_session:{nexus_token}")
-    if not session_raw: return
-    try:
-        s_data = json.loads(session_raw)
-        for c in s_data.get("cookies", []):
-            if c.get("name") == "token":
-                c["value"] = new_token
-        for orig in s_data.get("origins", []):
-            for ls in orig.get("localStorage", []):
-                if ls.get("name") == "persist:DKNow":
-                    p_val = json.loads(ls.get("value", "{}"))
-                    u_val = json.loads(p_val.get("user", "{}"))
-                    u_val["token"] = new_token
-                    if new_ref:
-                        u_val["refreshToken"] = new_ref
-                    p_val["user"] = json.dumps(u_val, ensure_ascii=False)
-                    ls["value"] = json.dumps(p_val, ensure_ascii=False)
-        db.setex(f"jet_session:{nexus_token}", 30 * 24 * 3600, json.dumps(s_data, ensure_ascii=False))
-    except Exception:
-        pass
-
-def refresh_dk_token(token, refresh_token, proxy_url=None):
-    if not refresh_token: return None, None
-    url = "https://api.digikalajet.ir/user/refresh-token/?ch=jj"
-    client_id = "FINGERPRINTV2-" + uuid.uuid4().hex
-    headers = {
-        "Accept": "application/json, text/plain, */*",
-        "Content-Type": "application/json",
-        "X-Request-UUID": str(uuid.uuid4()),
-        "ClientId": client_id,
-        "clientid-v2": client_id,
-        "ClientOs": "Android",
-        "Client": "mobile",
-        "platform-sso-disable-prod": "1",
-        "session": "",
-        "app-id": "08f293bd-0e29-4794-897c-a111b19da003",
-        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36",
-        "Origin": "https://www.digikalajet.com",
-        "Referer": "https://www.digikalajet.com/"
-    }
-    payload = {"refresh_token": refresh_token, "token": token or ""}
-    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
-    try:
-        res = requests.post(url, json=payload, headers=headers, proxies=proxies, timeout=12)
-        if res.status_code == 200:
-            res_json = res.json()
-            if res_json.get("status") == 200:
-                data = res_json.get("data", {})
-                return data.get("token"), data.get("refresh_token")
-    except Exception:
-        pass
-    return None, None
-
-def check_account_with_proxy(phone, acc_data, proxy_url=None):
-    nexus_token = acc_data.get("token")
-    if not nexus_token:
-        log_checker_event(f"❌ شماره {phone} | خطا: توکن در دیتابیس یافت نشد.")
-        return False, 0
-
-    dk_token, refresh_token = get_account_tokens(nexus_token)
-    if not dk_token and not refresh_token:
-        log_checker_event(f"❌ شماره {phone} | خطا: نشست کاربر در دیتابیس موجود نیست.")
-        return False, 0
-
-    client_id = "FINGERPRINTV2-" + uuid.uuid4().hex
-    session_hdr = f"{uuid.uuid4()}-V3*{int(time.time())}"
-    headers = {
-        "Accept": "application/json, text/plain, */*",
-        "X-Request-UUID": str(uuid.uuid4()),
-        "Authorization": dk_token,
-        "ClientId": client_id,
-        "clientid-v2": client_id,
-        "ClientOs": "Android",
-        "Client": "mobile",
-        "platform-sso-disable-prod": "1",
-        "session": session_hdr,
-        "app-id": "08f293bd-0e29-4794-897c-a111b19da003",
-        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36",
-        "Origin": "https://www.digikalajet.com",
-        "Referer": "https://www.digikalajet.com/"
-    }
-    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
-    order_url = "https://api.digikalajet.ir/order-shipments/?ch=jj"
-
-    need_refresh = False
-    try:
-        res = requests.get(order_url, headers=headers, proxies=proxies, timeout=12)
-        if res.status_code == 200:
-            res_json = res.json()
-            api_status = res_json.get("status")
-            if api_status in [401, 402]:
-                need_refresh = True
-            elif api_status == 200:
-                data_obj = res_json.get("data") or {}
-                pager_total = data_obj.get("pager", {}).get("total_items", 0)
-                orders_obj = data_obj.get("orders") or {}
-                ongoing = orders_obj.get("ongoing", []) if isinstance(orders_obj, dict) else []
-                accomplished = orders_obj.get("accomplished", []) if isinstance(orders_obj, dict) else []
-                total_orders = max(pager_total, len(ongoing) + len(accomplished))
-
-                if total_orders > 0:
-                    acc_data["total_orders"] = total_orders
-                    db.hset("jet:ordered_accounts", phone, json.dumps(acc_data, ensure_ascii=False))
-                    db.hdel("jet:bulk_accounts", phone)
-                    log_checker_event(f"✅ شماره {phone} | تایید خرید: {total_orders} سفارش | منتقل شد به لیست دارای خرید.")
-                    return True, total_orders
-                else:
-                    log_checker_event(f"⚪ شماره {phone} | تایید شد: بدون سفارش (خام)")
-                    return False, 0
-            else:
-                log_checker_event(f"⚠️ شماره {phone} | پاسخ سرور با کد {api_status}: {res.text[:60]}")
-                return False, 0
-        elif res.status_code in [401, 402]:
-            need_refresh = True
-        else:
-            log_checker_event(f"⚠️ خطای HTTP {res.status_code} برای شماره {phone}")
-            return False, 0
-    except requests.exceptions.ProxyError:
-        log_checker_event(f"🚫 خطای پروکسی برای {phone} | اتصال پروکسی ناموفق بود.")
-        return False, 0
-    except requests.exceptions.Timeout:
-        log_checker_event(f"⏱️ تایم‌اوت برای {phone} | پروکسی پاسخ نداد.")
-        return False, 0
-    except Exception as e:
-        log_checker_event(f"❌ خطای ارتباطی برای {phone} | {str(e)[:50]}")
-        return False, 0
-
-    # Auto-Refresh if Token is Expired
-    if need_refresh and refresh_token:
-        log_checker_event(f"🔄 شماره {phone} | توکن منقضی بود؛ در حال تمدید خودکار توکن...")
-        new_tok, new_ref = refresh_dk_token(dk_token, refresh_token, proxy_url)
-        if new_tok:
-            update_account_session_token(nexus_token, new_tok, new_ref)
-            headers["Authorization"] = new_tok
-            try:
-                retry_res = requests.get(order_url, headers=headers, proxies=proxies, timeout=12)
-                if retry_res.status_code == 200:
-                    retry_json = retry_res.json()
-                    if retry_json.get("status") == 200:
-                        data_obj = retry_json.get("data") or {}
-                        pager_total = data_obj.get("pager", {}).get("total_items", 0)
-                        orders_obj = data_obj.get("orders") or {}
-                        ongoing = orders_obj.get("ongoing", []) if isinstance(orders_obj, dict) else []
-                        accomplished = orders_obj.get("accomplished", []) if isinstance(orders_obj, dict) else []
-                        total_orders = max(pager_total, len(ongoing) + len(accomplished))
-
-                        if total_orders > 0:
-                            acc_data["total_orders"] = total_orders
-                            db.hset("jet:ordered_accounts", phone, json.dumps(acc_data, ensure_ascii=False))
-                            db.hdel("jet:bulk_accounts", phone)
-                            log_checker_event(f"✅ شماره {phone} (پس از تمدید توکن) | تایید خرید: {total_orders} سفارش | منتقل شد.")
-                            return True, total_orders
-                        else:
-                            log_checker_event(f"⚪ شماره {phone} (پس از تمدید توکن) | بدون سفارش (خام)")
-                            return False, 0
-            except Exception as e:
-                log_checker_event(f"❌ خطا پس از تمدید برای {phone}: {str(e)[:40]}")
-                return False, 0
-        else:
-            log_checker_event(f"❌ شماره {phone} | تمدید توکن ناموفق بود (احتمال ابطال کامل نشست).")
-            return False, 0
-    return False, 0
-
-# ================= Checker Worker Thread =================
-def run_cloud_checker_thread(proxy_list, start_idx=1, end_idx=0):
-    db.set("nexus:checker_running", "1")
-    db.set("nexus:checker_stop", "0")
-
-    try:
-        valid_proxies = [p for p in [format_proxy(x) for x in proxy_list] if p]
-
-        accounts = db.hgetall("jet:bulk_accounts")
-        if not accounts:
-            msg = "⚠️ لیست خام برای بررسی خالی است."
-            db.rpush("bot:admin_alerts", msg)
-            log_checker_event(msg)
-            return
-
-        def get_ts(item):
-            try: return json.loads(item[1]).get("created_at", "")
-            except: return ""
-            
-        sorted_accounts = sorted(accounts.items(), key=get_ts, reverse=True)
-        total_available = len(sorted_accounts)
-
-        try: start = max(1, int(start_idx))
-        except: start = 1
-        try: end = int(end_idx) if end_idx and int(end_idx) > 0 else total_available
-        except: end = total_available
-
-        start = min(start, total_available)
-        end = min(max(start, end), total_available)
-
-        target_accounts = sorted_accounts[start-1 : end]
-        if not target_accounts:
-            msg = f"⚠️ در بازه ردیف {start} تا {end} هیچ اکانتی یافت نشد."
-            db.rpush("bot:admin_alerts", msg)
-            log_checker_event(msg)
-            return
-
-        p_count = len(valid_proxies)
-        proxy_info = f"{p_count} پروکسی اختصاصی" if p_count > 0 else "بدون پروکسی (اتصال مستقیم)"
-        start_msg = f"🔎 شروع چکر | ردیف {start} تا {end} (تعداد: {len(target_accounts)}) | {proxy_info}"
-        db.rpush("bot:admin_alerts", start_msg)
-        log_checker_event(start_msg)
-
-        ordered_count = 0
-        checked_count = 0
-        p_idx = 0
-        max_workers = min(p_count * 2, 20) if p_count > 0 else min(8, len(target_accounts) or 1)
-
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = []
-            for phone, acc_raw in target_accounts:
-                if db.get("nexus:checker_stop") == "1":
-                    break
-                acc_data = json.loads(acc_raw)
-                chosen_proxy = valid_proxies[p_idx % p_count] if p_count > 0 else None
-                p_idx += 1
-                futures.append(executor.submit(check_account_with_proxy, phone, acc_data, chosen_proxy))
-
-            for f in as_completed(futures):
-                if db.get("nexus:checker_stop") == "1":
-                    db.rpush("bot:admin_alerts", "⛔️ عملیات چکر با دستور کاربر متوقف شد.")
-                    log_checker_event("⛔️ عملیات چکر با دستور کاربر متوقف شد.")
-                    break
-                checked_count += 1
-                is_ordered, count = f.result()
-                if is_ordered:
-                    ordered_count += 1
-
-        finish_msg = f"🎯 پایان چکر | بررسی‌شده: {checked_count} | دارای خرید: {ordered_count}"
-        db.rpush("bot:admin_alerts", finish_msg)
-        log_checker_event(finish_msg)
-    finally:
-        db.set("nexus:checker_running", "0")
-        db.set("nexus:checker_stop", "0")
-
-# ================= Web App Routes =================
-LOGIN_HTML = """<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>ورود | Nexus</title><script src="https://cdn.tailwindcss.com"></script></head><body class="min-h-screen bg-slate-50 flex items-center justify-center p-4"><div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl w-full max-w-sm"><h2 class="text-xl font-bold text-slate-800 text-center mb-6">NEXUS WORKSPACE</h2><form method="POST" action="/login" class="flex flex-col gap-4"><input type="password" name="password" placeholder="رمز عبور..." required class="border border-slate-300 rounded-xl p-3 text-center outline-none focus:border-blue-500"><button type="submit" class="bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors">ورود به سیستم</button></form></div></body></html>"""
+LOGIN_HTML = """<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>ورود | Nexus</title><script src="https://cdn.tailwindcss.com"></script></head><body class="min-h-screen bg-slate-50 flex items-center justify-center p-4"><div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl w-full max-w-sm"><h2 class="text-xl font-bold text-slate-800 text-center mb-6">NEXUS WORKSPACE</h2><form method="POST" action="/login" class="flex flex-col gap-4"><input type="password" name="password" placeholder="رمز عبور..." required class="border border-slate-300 rounded-xl p-3 text-center outline-none focus:border-blue-500"><button type="submit" class="bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700">ورود</button></form></div></body></html>"""
 
 @app.route('/')
 def index():
@@ -433,34 +120,27 @@ def get_accounts(acc_type):
         })
     return jsonify({"data": data})
 
-@app.route('/api/custom_checker', methods=['POST'])
-def start_custom_checker():
+@app.route('/api/checker/start', methods=['POST'])
+def start_checker():
     if not session.get('logged_in') or not db: return jsonify({"error": "Unauthorized"}), 401
-    if db.get("nexus:checker_running") == "1":
-        return jsonify({"status": "error", "message": "چکر در حال حاضر در حال اجرا است."})
-
     req = request.json or {}
-    proxies_text = req.get("proxies", "")
     start_idx = req.get("start_idx", 1)
-    end_idx = req.get("end_idx", 0)
-    
-    proxy_list = [p.strip() for p in proxies_text.strip().split("\n") if p.strip()]
-    threading.Thread(target=run_cloud_checker_thread, args=(proxy_list, start_idx, end_idx), daemon=True).start()
-    return jsonify({"status": "ok", "message": "پردازش چکر آغاز شد."})
+    end_idx = req.get("end_idx", 200)
+    db.delete("bot:admin_commands")
+    db.rpush("bot:admin_commands", f"START_CHECKER:{start_idx}:{end_idx}")
+    return jsonify({"status": "ok", "message": f"فرمان چکر برای ردیف {start_idx} تا {end_idx} ارسال شد."})
 
 @app.route('/api/checker/stop', methods=['POST'])
-def stop_custom_checker():
+def stop_checker():
     if not session.get('logged_in') or not db: return jsonify({"error": "Unauthorized"}), 401
     db.set("nexus:checker_stop", "1")
-    return jsonify({"status": "ok", "message": "فرمان توقف فوری چکر ثبت شد."})
+    return jsonify({"status": "ok", "message": "فرمان توقف چکر ثبت شد."})
 
-@app.route('/api/download_checker_logs')
-def download_checker_logs():
-    if not session.get('logged_in') or not db: return "Unauthorized", 401
-    raw_logs = db.lrange("nexus:checker_logs", 0, -1)
-    content = "\n".join(raw_logs) if raw_logs else "هیچ لاگی ثبت نشده است."
-    filename = f"Nexus_Checker_Logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    return Response(content, mimetype="text/plain;charset=utf-8", headers={"Content-Disposition": f"attachment;filename={filename}"})
+@app.route('/api/action/clear_logs', methods=['POST'])
+def clear_logs():
+    if not session.get('logged_in') or not db: return jsonify({"error": "Unauthorized"}), 401
+    db.delete("bot:admin_alerts", "nexus:checker_logs")
+    return jsonify({"status": "ok", "message": "ترمینال و تمام لاگ‌ها از دیتابیس پاکسازی شدند."})
 
 @app.route('/api/action/<cmd>', methods=['POST'])
 def handle_action(cmd):
@@ -477,7 +157,7 @@ def handle_action(cmd):
         if req.get('code') != 'NEXUS-WIPE-ALL': return jsonify({"status": "error", "message": "کد اشتباه است."})
         db.delete("jet:processed_phones", "jet:bulk_accounts", "jet:ordered_accounts", "bot:admin_alerts", "bot:new_accounts", "nexus:checker_logs")
         for key in db.keys("jet_session:*"): db.delete(key)
-        return jsonify({"status": "ok", "message": "کل دیتابیس با موفقیت فلش شد."})
+        return jsonify({"status": "ok", "message": "کل دیتابیس فلش شد."})
     return jsonify({"status": "error"})
 
 @app.route('/api/action/delete_account', methods=['POST'])
