@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus Panel</title>
+    <title>Nexus Enterprise Dashboard</title>
     
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -13,17 +13,17 @@
     <style>
         body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; color: #1e293b; padding-bottom: 80px; }
         @media (min-width: 1024px) { body { padding-bottom: 0; } }
-        .clean-card { background: #ffffff; border-radius: 12px; box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+        .corp-card { background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .terminal-box { background: #0f172a; color: #10b981; border-radius: 8px; height: 260px; overflow-y: auto; font-family: monospace; }
         table.dataTable { border-collapse: collapse !important; width: 100% !important; font-size: 0.875rem; color: #334155; }
-        table.dataTable thead th { border-bottom: 2px solid #e2e8f0 !important; color: #64748b !important; padding: 14px 12px; text-align: right; font-weight: bold; }
+        table.dataTable thead th { border-bottom: 2px solid #e2e8f0 !important; color: #64748b !important; padding: 12px; text-align: right; font-weight: bold; }
         table.dataTable tbody tr { transition: background-color 0.2s; border-bottom: 1px solid #f1f5f9 !important; }
         table.dataTable tbody tr:hover { background-color: #f8fafc !important; }
-        table.dataTable tbody td { padding: 14px 12px; vertical-align: middle; }
+        table.dataTable tbody td { padding: 12px; vertical-align: middle; }
         table.dataTable.no-footer { border-bottom: none !important; }
         .dataTables_filter input { padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; margin-right: 8px; font-family: inherit; }
         .tab-btn { border-bottom: 2px solid transparent; }
-        .tab-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .tab-btn.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
     </style>
 </head>
 <body class="antialiased lg:pb-8">
@@ -31,16 +31,18 @@
     <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="h-8 w-8 bg-blue-600 rounded flex items-center justify-center">
+                <div class="h-8 w-8 bg-blue-600 rounded flex items-center justify-center shadow-sm">
                     <i class="ph-bold ph-hard-drives text-white text-lg"></i>
                 </div>
-                <h1 class="text-lg font-bold text-slate-800">داشبورد مدیریت دیتابیس</h1>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-slate-800">داشبورد نکسوس</h1>
+                </div>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="/api/download_checker_logs" target="_blank" class="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded transition-colors border border-slate-200">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="/api/download_checker_logs" target="_blank" class="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg transition-colors border border-slate-200">
                     <i class="ph-bold ph-file-text text-sm"></i> دانلود لاگ خطاهای چکر
                 </a>
-                <a href="/logout" class="text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-1.5 rounded transition-colors">خروج</a>
+                <a href="/logout" class="text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-2 rounded-lg transition-colors">خروج</a>
             </div>
         </div>
     </header>
@@ -48,21 +50,24 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="clean-card p-5">
-                <p class="text-sm font-semibold text-slate-500 mb-2">لیست خام</p>
-                <div class="text-2xl font-bold text-slate-800" id="stat-total">0</div>
+            <div class="corp-card p-5">
+                <p class="text-xs font-semibold text-slate-500 mb-1">حساب‌های خام</p>
+                <div class="text-2xl font-black text-slate-800" id="stat-total">0</div>
             </div>
-            <div class="clean-card p-5">
-                <p class="text-sm font-semibold text-emerald-600 mb-2">دارای خرید</p>
-                <div class="text-2xl font-bold text-emerald-600" id="stat-ordered">0</div>
+            <div class="corp-card p-5 border-emerald-100 bg-emerald-50/20">
+                <p class="text-xs font-semibold text-emerald-700 mb-1">دارای تاریخچه خرید</p>
+                <div class="text-2xl font-black text-emerald-700" id="stat-ordered">0</div>
             </div>
-            <div class="clean-card p-5">
-                <p class="text-sm font-semibold text-slate-500 mb-2">پروکسی لوکال</p>
-                <div class="text-xl font-bold text-slate-800" id="stat-proxies">بررسی...</div>
+            <div class="corp-card p-5">
+                <p class="text-xs font-semibold text-slate-500 mb-1">وضعیت چکر ابری</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <div id="checkerDot" class="h-2.5 w-2.5 rounded-full bg-slate-300"></div>
+                    <span id="checkerStatusText" class="text-sm font-bold text-slate-600">آماده‌باش</span>
+                </div>
             </div>
-            <div class="clean-card p-5 flex flex-col justify-center">
-                <p class="text-sm font-semibold text-slate-500 mb-2">وضعیت سیستم بیگی</p>
-                <div class="flex items-center gap-2">
+            <div class="corp-card p-5">
+                <p class="text-xs font-semibold text-slate-500 mb-1">موتور ثبت‌نام لوکال</p>
+                <div class="flex items-center gap-2 mt-1">
                     <div id="statusDot" class="h-2.5 w-2.5 rounded-full bg-slate-300"></div>
                     <span id="statusText" class="text-sm font-bold text-slate-600">قطع ارتباط</span>
                 </div>
@@ -70,115 +75,134 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-            <div class="hidden lg:flex lg:col-span-1 flex-col gap-4">
-                <div class="clean-card p-5">
-                    <button onclick="triggerAction('start')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded mb-2 transition-colors flex items-center justify-center gap-2">
+            <div class="hidden lg:flex lg:col-span-1 flex-col gap-3">
+                <div class="corp-card p-5">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100">عملیات سیستم</h3>
+                    
+                    <button onclick="triggerAction('start')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl mb-2 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
                         <i class="ph-bold ph-play"></i> استارت ثبت‌نام بیگی
                     </button>
-                    <button onclick="openCustomProxyModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded mb-2 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                        <i class="ph-bold ph-shield-check"></i> چک با پروکسی من
+                    
+                    <button onclick="openCheckerModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl mb-2 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
+                        <i class="ph-bold ph-gear"></i> تنظیم و اجرای چکر خرید
                     </button>
-                    <button onclick="triggerAction('stop')" class="w-full bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold py-3 rounded mb-4 transition-colors">
-                        توقف عملیات
+                    
+                    <button onclick="stopChecker()" id="btnStopChecker" class="w-full bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 font-bold py-2.5 rounded-xl mb-3 transition-colors flex items-center justify-center gap-2 text-sm">
+                        <i class="ph-bold ph-stop"></i> توقف فوری چکر
                     </button>
-                    <div class="grid grid-cols-2 gap-2 pt-4 border-t border-slate-100">
-                        <button onclick="openExportModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold py-2 rounded text-sm transition-colors">خروجی</button>
-                        <button onclick="openWipeModal()" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-2 rounded text-sm transition-colors">حذف کل</button>
+                    
+                    <div class="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
+                        <button onclick="openExportModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold py-2 rounded-lg text-xs transition-colors">خروجی داده‌ها</button>
+                        <button onclick="openWipeModal()" class="bg-slate-50 text-rose-600 hover:bg-rose-50 font-bold py-2 rounded-lg text-xs transition-colors">پاکسازی</button>
                     </div>
                 </div>
             </div>
-            <div class="col-span-1 lg:col-span-3 clean-card overflow-hidden flex flex-col">
+
+            <div class="col-span-1 lg:col-span-3 corp-card overflow-hidden flex flex-col">
                 <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-600">ترمینال گزارشات و لاگ زنده</span>
-                    <a href="/api/download_checker_logs" target="_blank" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded shadow-sm transition-colors">
-                        <i class="ph-bold ph-download-simple"></i> دانلود لاگ خطاهای چکر (.txt)
+                    <span class="text-xs font-bold text-slate-600">ترمینال زنده گزارش‌ها</span>
+                    <a href="/api/download_checker_logs" target="_blank" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                        <i class="ph-bold ph-download-simple"></i> لاگ اختصاصی چکر (.txt)
                     </a>
                 </div>
-                <div class="terminal-box p-4 text-sm" id="terminalOutput"></div>
+                <div class="terminal-box p-4 text-xs leading-relaxed" id="terminalOutput"></div>
             </div>
         </div>
 
-        <div class="clean-card p-5 mb-20 lg:mb-0">
-            <div class="flex gap-6 mb-5 border-b border-slate-200">
+        <div class="corp-card p-5 mb-20 lg:mb-0">
+            <div class="flex gap-6 mb-4 border-b border-slate-200">
                 <button onclick="switchTab('normal')" id="tab-normal" class="tab-btn active pb-3 font-bold text-sm text-slate-500 hover:text-slate-800 transition-colors">لیست خام</button>
                 <button onclick="switchTab('ordered')" id="tab-ordered" class="tab-btn pb-3 font-bold text-sm text-slate-500 hover:text-slate-800 transition-colors">دارای خرید</button>
             </div>
             
-            <div class="flex items-center gap-2 bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-4 w-max">
-                <span class="text-slate-600 font-medium ml-1">تاریخ:</span>
-                <input type="datetime-local" id="filterStart" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none text-slate-700">
+            <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs mb-4 w-max">
+                <span class="text-slate-600 font-medium">فیلتر تاریخ:</span>
+                <input type="datetime-local" id="filterStart" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none">
                 <span class="text-slate-400">تا</span>
-                <input type="datetime-local" id="filterEnd" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none text-slate-700">
-                <button onclick="resetDateFilter()" class="bg-slate-200 px-3 py-1.5 rounded text-slate-600 hover:bg-slate-300 text-xs font-bold transition-colors">حذف فیلتر</button>
+                <input type="datetime-local" id="filterEnd" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none">
+                <button onclick="resetDateFilter()" class="bg-slate-200 px-2.5 py-1 rounded text-slate-600 hover:bg-slate-300 font-bold transition-colors">حذف</button>
             </div>
 
             <div id="wrap-normal" class="overflow-x-auto">
                 <table id="normalTable" class="display nowrap w-full">
-                    <thead><tr><th>موبایل</th><th>پروفایل</th><th>تاریخ ثبت</th><th>لینک ورود</th><th>عملیات</th></tr></thead><tbody></tbody>
+                    <thead><tr><th>ردیف</th><th>موبایل</th><th>پروفایل</th><th>تاریخ ثبت</th><th>لینک اختصاصی</th><th>عملیات</th></tr></thead><tbody></tbody>
                 </table>
             </div>
 
             <div id="wrap-ordered" class="overflow-x-auto hidden">
                 <table id="orderedTable" class="display nowrap w-full">
-                    <thead><tr><th>موبایل</th><th>پروفایل</th><th>تاریخ ثبت</th><th>وضعیت خرید</th><th>لینک ورود</th><th>عملیات</th></tr></thead><tbody></tbody>
+                    <thead><tr><th>ردیف</th><th>موبایل</th><th>پروفایل</th><th>تاریخ ثبت</th><th>وضعیت خرید</th><th>لینک اختصاصی</th><th>عملیات</th></tr></thead><tbody></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <div class="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-40 px-4 py-2 flex gap-2 pb-safe shadow">
-        <button onclick="triggerAction('start')" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-play text-base"></i>ثبت‌نام</button>
-        <button onclick="openCustomProxyModal()" class="flex-1 bg-emerald-600 text-white font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-shield-check text-base"></i>چکر من</button>
-        <a href="/api/download_checker_logs" target="_blank" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-file-text text-base"></i>لاگ خطا</a>
-        <button onclick="openExportModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-download-simple text-base"></i>خروجی</button>
-        <button onclick="triggerAction('stop')" class="flex-1 bg-white border border-slate-300 text-slate-600 font-bold py-3 rounded flex flex-col items-center gap-1 text-[11px]"><i class="ph-bold ph-stop text-base"></i>توقف</button>
+        <button onclick="triggerAction('start')" class="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-lg flex flex-col items-center gap-1 text-[10px]"><i class="ph-bold ph-play text-base"></i>ثبت‌نام</button>
+        <button onclick="openCheckerModal()" class="flex-1 bg-emerald-600 text-white font-bold py-2.5 rounded-lg flex flex-col items-center gap-1 text-[10px]"><i class="ph-bold ph-gear text-base"></i>اجرای چکر</button>
+        <button onclick="stopChecker()" class="flex-1 bg-rose-50 text-rose-600 font-bold py-2.5 rounded-lg flex flex-col items-center gap-1 text-[10px] border border-rose-200"><i class="ph-bold ph-stop text-base"></i>توقف چکر</button>
+        <button onclick="openExportModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-lg flex flex-col items-center gap-1 text-[10px]"><i class="ph-bold ph-download-simple text-base"></i>خروجی</button>
     </div>
 
-    <div id="customProxyModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><i class="ph-bold ph-shield-check text-emerald-600"></i> چکر با پروکسی شخصی</h3>
-                <button onclick="closeCustomProxyModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button>
+    <div id="checkerModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+                    <i class="ph-bold ph-gear text-emerald-600 text-lg"></i> تنظیمات و اجرای چکر خرید
+                </h3>
+                <button onclick="closeCheckerModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button>
             </div>
-            <p class="text-xs text-slate-500 mb-3 leading-relaxed">
-                لیست پروکسی‌های خود را خط‌به‌خط وارد کنید.<br>
-                فرمت: <code class="bg-slate-100 px-1 rounded text-slate-700">ip:port:user:pass</code> یا <code class="bg-slate-100 px-1 rounded text-slate-700">http://user:pass@ip:port</code>
-            </p>
-            <textarea id="customProxiesInput" class="w-full h-44 border border-slate-300 rounded-lg p-3 text-xs font-mono outline-none focus:border-emerald-500 mb-4" placeholder="192.168.1.1:8080:username:password&#10;192.168.1.2:8080:username:password" dir="ltr"></textarea>
             
-            <div class="flex items-center justify-between mb-4">
-                <a href="/api/download_checker_logs" target="_blank" class="text-xs text-blue-600 hover:underline flex items-center gap-1">
-                    <i class="ph-bold ph-download-simple"></i> دانلود لاگ اجرای قبلی چکر
-                </a>
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 mb-4">
+                <label class="block text-xs font-bold text-slate-700 mb-2">محدوده بررسی ردیف اکانت‌ها:</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <span class="text-[11px] text-slate-500 block mb-1">از ردیف شماره:</span>
+                        <input type="number" id="checkerStartIdx" value="1" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-center text-sm font-bold outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-slate-500 block mb-1">تا ردیف شماره:</span>
+                        <input type="number" id="checkerEndIdx" value="200" min="1" placeholder="خالی = تا آخرین اکانت" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-center text-sm font-bold outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="text-xs font-bold text-slate-700">لیست پروکسی‌ها (اختیاری):</label>
+                    <span class="text-[10px] text-slate-400">خالی = اتصال مستقیم سرور</span>
+                </div>
+                <textarea id="checkerProxiesInput" class="w-full h-32 border border-slate-300 rounded-xl p-3 text-xs font-mono outline-none focus:border-emerald-500" placeholder="3j8a2677najh:sslghd6cp33cmdr@216.26.250.135:3129&#10;192.168.1.1:8080:user:pass" dir="ltr"></textarea>
+                <p class="text-[10px] text-slate-400 mt-1">پشتیبانی از فرمت‌های <code class="bg-slate-100 px-1 rounded">user:pass@ip:port</code> و <code class="bg-slate-100 px-1 rounded">ip:port:user:pass</code></p>
             </div>
 
             <div class="flex gap-2">
-                <button onclick="closeCustomProxyModal()" class="flex-1 py-2.5 rounded-lg bg-slate-100 text-slate-600 font-bold text-sm">لغو</button>
-                <button onclick="submitCustomChecker()" class="flex-1 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow">شروع بررسی خریدها</button>
+                <button onclick="closeCheckerModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">انصراف</button>
+                <button onclick="submitChecker()" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md">شروع بررسی</button>
             </div>
         </div>
     </div>
 
     <div id="exportModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg w-full max-w-sm p-6 shadow-xl">
-            <div class="flex justify-between items-center mb-5"><h3 class="font-bold text-lg text-slate-800">استخراج داده‌ها</h3><button onclick="closeExportModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button></div>
+        <div class="bg-white rounded-xl w-full max-w-sm p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-base text-slate-800">استخراج داده‌ها</h3><button onclick="closeExportModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button></div>
             <div class="flex flex-col gap-2">
-                <button onclick="exportData('raw_links')" class="text-right p-3 rounded border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700">۱. لینک‌های خام (TXT)</button>
-                <button onclick="exportData('links_phone')" class="text-right p-3 rounded border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700">۲. لینک + شماره (TXT)</button>
-                <button onclick="exportData('numbered_links')" class="text-right p-3 rounded border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700">۳. لیست شماره‌دار (TXT)</button>
-                <button onclick="exportData('json')" class="text-right p-3 rounded border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700">۴. خروجی کامل (JSON)</button>
+                <button onclick="exportData('raw_links')" class="text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-700">۱. فقط لینک‌ها (TXT)</button>
+                <button onclick="exportData('links_phone')" class="text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-700">۲. لینک همراه با شماره (TXT)</button>
+                <button onclick="exportData('numbered_links')" class="text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-700">۳. لیست شماره‌دار (TXT)</button>
+                <button onclick="exportData('json')" class="text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-700">۴. فول بکاپ دیتابیس (JSON)</button>
             </div>
         </div>
     </div>
 
     <div id="wipeModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg w-full max-w-sm p-6 text-center shadow-xl border-t-4 border-red-500">
-            <h3 class="font-bold text-lg text-slate-900 mb-2">پاکسازی دیتابیس</h3>
-            <p class="text-sm text-slate-500 mb-4">جهت حذف کل رکوردها کلمه <span class="font-mono text-red-600 font-bold">NEXUS-WIPE-ALL</span> را بنویسید.</p>
-            <input type="text" id="wipeConfirmInput" class="w-full border border-slate-300 rounded px-3 py-2 text-center mb-4 font-mono outline-none focus:border-red-500">
+        <div class="bg-white rounded-xl w-full max-w-sm p-6 text-center shadow-xl border-t-4 border-rose-500">
+            <h3 class="font-bold text-base text-slate-900 mb-2">پاکسازی کامل دیتابیس</h3>
+            <p class="text-xs text-slate-500 mb-4">جهت حذف کل رکوردها کلمه <span class="font-mono text-rose-600 font-bold">NEXUS-WIPE-ALL</span> را وارد کنید.</p>
+            <input type="text" id="wipeConfirmInput" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-center mb-4 font-mono outline-none focus:border-rose-500 text-sm">
             <div class="flex gap-2">
-                <button onclick="closeWipeModal()" class="flex-1 py-2 rounded bg-slate-100 text-slate-600 font-bold">انصراف</button>
-                <button onclick="confirmWipe()" class="flex-1 py-2 rounded bg-red-600 text-white font-bold">حذف اطلاعات</button>
+                <button onclick="closeWipeModal()" class="flex-1 py-2 rounded-lg bg-slate-100 text-slate-600 font-bold text-xs">انصراف</button>
+                <button onclick="confirmWipe()" class="flex-1 py-2 rounded-lg bg-rose-600 text-white font-bold text-xs">حذف قطعی</button>
             </div>
         </div>
     </div>
@@ -193,31 +217,33 @@
             const min = document.getElementById('filterStart').value ? new Date(document.getElementById('filterStart').value).getTime() : null;
             const max = document.getElementById('filterEnd').value ? new Date(document.getElementById('filterEnd').value).getTime() : null;
             if(!min && !max) return true;
-            const rowDate = data[2] ? new Date(data[2].replace(' ', 'T')).getTime() : null;
+            const rowDate = data[3] ? new Date(data[3].replace(' ', 'T')).getTime() : null;
             return !(rowDate && ((min && rowDate < min) || (max && rowDate > max)));
         });
 
         $(document).ready(function() {
-            const opts = { language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" }, pageLength: 10, order: [[2, 'desc']] };
+            const opts = { language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" }, pageLength: 10, order: [[0, 'asc']] };
             
             tNormal = $('#normalTable').DataTable({ ...opts,
                 columns: [
-                    { data: 'phone', render: d => `<span class="font-mono font-semibold">${d}</span>` },
-                    { data: 'name', render: d => `<span>${d}</span>` },
+                    { data: 'index', render: d => `<span class="text-slate-400 font-mono text-xs">${d}</span>` },
+                    { data: 'phone', render: d => `<span class="font-mono font-semibold text-slate-700">${d}</span>` },
+                    { data: 'name', render: d => `<span class="text-slate-800">${d}</span>` },
                     { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
                     { data: 'link', render: d => `<div class="flex items-center gap-1"><input type="text" readonly value="${d}" class="text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1 w-24 sm:w-32 outline-none cursor-pointer" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs font-bold">کپی</button></div>` },
-                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-red-500 text-lg"><i class="ph-bold ph-trash"></i></button>` }
+                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-rose-500"><i class="ph-bold ph-trash text-base"></i></button>` }
                 ], ajax: { url: '/api/accounts/normal', dataSrc: 'data' }
             });
 
             tOrdered = $('#orderedTable').DataTable({ ...opts,
                 columns: [
-                    { data: 'phone', render: d => `<span class="font-mono font-semibold">${d}</span>` },
-                    { data: 'name', render: d => `<span>${d}</span>` },
+                    { data: 'index', render: d => `<span class="text-slate-400 font-mono text-xs">${d}</span>` },
+                    { data: 'phone', render: d => `<span class="font-mono font-semibold text-slate-700">${d}</span>` },
+                    { data: 'name', render: d => `<span class="text-slate-800">${d}</span>` },
                     { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
-                    { data: 'total_orders', render: d => `<span class="bg-emerald-100 text-emerald-700 font-bold text-xs px-2 py-1 rounded">بله (${d} سفارش)</span>` },
+                    { data: 'total_orders', render: d => `<span class="bg-emerald-100 text-emerald-700 font-bold text-xs px-2 py-1 rounded-md">بله (${d} سفارش)</span>` },
                     { data: 'link', render: d => `<div class="flex items-center gap-1"><input type="text" readonly value="${d}" class="text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1 w-24 sm:w-32 outline-none cursor-pointer" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs font-bold">کپی</button></div>` },
-                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-red-500 text-lg"><i class="ph-bold ph-trash"></i></button>` }
+                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-rose-500"><i class="ph-bold ph-trash text-base"></i></button>` }
                 ], ajax: { url: '/api/accounts/ordered', dataSrc: 'data' }
             });
             $('#filterStart, #filterEnd').on('change', () => { tNormal.draw(); tOrdered.draw(); });
@@ -236,11 +262,28 @@
             fetch('/api/stats').then(res => res.json()).then(data => {
                 document.getElementById('stat-total').innerText = data.total_accounts;
                 document.getElementById('stat-ordered').innerText = data.ordered_accounts;
-                document.getElementById('stat-proxies').innerText = data.active_proxies === null ? "قطع" : data.active_proxies;
+
+                const chkDot = document.getElementById('checkerDot'), chkTxt = document.getElementById('checkerStatusText');
+                if (data.checker_running) {
+                    chkDot.className = 'h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse';
+                    chkTxt.innerText = 'در حال بررسی خریدها...';
+                    chkTxt.className = 'text-sm font-bold text-emerald-600';
+                } else {
+                    chkDot.className = 'h-2.5 w-2.5 rounded-full bg-slate-300';
+                    chkTxt.innerText = 'آماده‌باش';
+                    chkTxt.className = 'text-sm font-bold text-slate-600';
+                }
 
                 const sDot = document.getElementById('statusDot'), sTxt = document.getElementById('statusText');
-                if (data.system_status === 'Registering') { sDot.className = 'h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse'; sTxt.innerText = 'ثبت‌نام لوکال'; } 
-                else { sDot.className = 'h-2.5 w-2.5 rounded-full bg-slate-300'; sTxt.innerText = 'آماده‌باش'; }
+                if (data.system_status === 'Registering') {
+                    sDot.className = 'h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse';
+                    sTxt.innerText = 'در حال ثبت‌نام محلی';
+                    sTxt.className = 'text-sm font-bold text-blue-600';
+                } else {
+                    sDot.className = 'h-2.5 w-2.5 rounded-full bg-slate-300';
+                    sTxt.innerText = 'آماده‌باش';
+                    sTxt.className = 'text-sm font-bold text-slate-600';
+                }
             });
         }
 
@@ -250,10 +293,10 @@
                 const logsStr = JSON.stringify(data.logs);
                 if (logsStr !== lastLogs) {
                     const out = document.getElementById('terminalOutput'); out.innerHTML = '';
-                    if(data.logs.length === 0) out.innerHTML = '<span class="text-slate-500">منتظر دریافت لاگ...</span>';
+                    if(data.logs.length === 0) out.innerHTML = '<span class="text-slate-500">در انتظار دریافت داده...</span>';
                     data.logs.forEach(l => { 
-                        const div = document.createElement('div'); div.className = 'mb-1'; 
-                        let color = l.message.includes('❌') || l.message.includes('error') || l.message.includes('⚠️') ? 'text-rose-400' : 'text-emerald-400';
+                        const div = document.createElement('div'); div.className = 'mb-1 font-mono'; 
+                        let color = l.message.includes('❌') || l.message.includes('🚫') || l.message.includes('⛔') ? 'text-rose-400' : (l.message.includes('✅') || l.message.includes('🎯') ? 'text-emerald-400' : 'text-slate-300');
                         div.innerHTML = `<span class="text-slate-500">[${l.timestamp}] ></span> <span class="${color}">${l.message}</span>`; 
                         out.appendChild(div); 
                     });
@@ -268,19 +311,36 @@
         function triggerAction(action) { fetch(`/api/action/${action}`, { method: 'POST' }).then(() => fetchStats()); }
         function deleteAccount(phone) { if(confirm('رکورد حذف شود؟')) { fetch('/api/action/delete_account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({phone: phone}) }).then(() => { tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); }); } }
         
-        function openCustomProxyModal() { document.getElementById('customProxyModal').classList.remove('hidden'); }
-        function closeCustomProxyModal() { document.getElementById('customProxyModal').classList.add('hidden'); }
-        function submitCustomChecker() {
-            const text = document.getElementById('customProxiesInput').value;
-            if(!text.trim()) return alert('لطفاً حداقل یک پروکسی وارد کنید.');
+        function openCheckerModal() { document.getElementById('checkerModal').classList.remove('hidden'); }
+        function closeCheckerModal() { document.getElementById('checkerModal').classList.add('hidden'); }
+        
+        function submitChecker() {
+            const startVal = document.getElementById('checkerStartIdx').value;
+            const endVal = document.getElementById('checkerEndIdx').value;
+            const proxyText = document.getElementById('checkerProxiesInput').value;
+
             fetch('/api/custom_checker', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ proxies: text })
+                body: JSON.stringify({
+                    start_idx: parseInt(startVal) || 1,
+                    end_idx: parseInt(endVal) || 0,
+                    proxies: proxyText
+                })
             }).then(res => res.json()).then(data => {
                 alert(data.message);
-                closeCustomProxyModal();
+                closeCheckerModal();
+                fetchStats();
             });
+        }
+
+        function stopChecker() {
+            if(confirm('آیا از توقف فوری چکر اطمینان دارید؟')) {
+                fetch('/api/checker/stop', { method: 'POST' }).then(res => res.json()).then(data => {
+                    alert(data.message);
+                    fetchStats();
+                });
+            }
         }
 
         function openWipeModal() { document.getElementById('wipeConfirmInput').value = ''; document.getElementById('wipeModal').classList.remove('hidden'); }
@@ -296,11 +356,11 @@
             const activeTable = currentTab === 'normal' ? tNormal : tOrdered;
             const rows = activeTable.rows({ search: 'applied' }).data().toArray();
             if (rows.length === 0) return alert('داده‌ای وجود ندارد.');
-            let content = "", name = `Export_${currentTab}_${type}.txt`, mime = "text/plain;charset=utf-8";
+            let content = "", name = `Nexus_${currentTab}_${type}.txt`, mime = "text/plain;charset=utf-8";
             if (type === 'raw_links') content = rows.map(r => r.link).join('\n');
             else if (type === 'links_phone') content = rows.map(r => `${r.phone} - ${r.link}`).join('\n');
             else if (type === 'numbered_links') content = rows.map((r, i) => `${i + 1}. ${r.link}`).join('\n');
-            else if (type === 'json') { content = JSON.stringify(rows, null, 2); name = `Export_${currentTab}.json`; mime = "application/json;charset=utf-8"; }
+            else if (type === 'json') { content = JSON.stringify(rows, null, 2); name = `Nexus_${currentTab}.json`; mime = "application/json;charset=utf-8"; }
             const blob = new Blob([content], { type: mime }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; link.click(); closeExportModal();
         }
     </script>
