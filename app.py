@@ -60,20 +60,56 @@ def token_worker():
 threading.Thread(target=token_worker, daemon=True).start()
 
 # ================= Custom Proxy Cloud Checker =================
+import re, urllib.parse
+
 def format_proxy(raw_p):
     raw_p = raw_p.strip()
-    if not raw_p: return None
-    if raw_p.startswith("http://") or raw_p.startswith("https://") or raw_p.startswith("socks5://"):
-        return raw_p
+    if not raw_p:
+        return None
+    
+    # 1. استخراج پروتکل (پیش‌فرض http)
+    scheme = "http"
+    if "://" in raw_p:
+        scheme, raw_p = raw_p.split("://", 1)
+        scheme = scheme.lower()
+        
+    # 2. اگر علامت @ در متن باشد (دقیقاً مانند پروکسی‌های شما)
+    if "@" in raw_p:
+        part1, part2 = raw_p.rsplit("@", 1)
+        ip_port_pattern = r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|[a-zA-Z0-9\.\-]+):(\d+)$'
+        
+        # حالت اول: user:pass@ip:port
+        if re.match(ip_port_pattern, part2):
+            auth_part, host_part = part1, part2
+        # حالت دوم: ip:port@user:pass
+        else:
+            auth_part, host_part = part2, part1
+            
+        if ":" in auth_part:
+            u, p = auth_part.split(":", 1)
+            return f"{scheme}://{urllib.parse.quote(u)}:{urllib.parse.quote(p)}@{host_part}"
+        return f"{scheme}://{auth_part}@{host_part}"
+        
+    # 3. اگر فقط با دو نقطه (:) جدا شده باشد
     parts = raw_p.split(":")
     if len(parts) == 4:
-        ip, port, user, pwd = parts
-        u_enc = urllib.parse.quote(user)
-        p_enc = urllib.parse.quote(pwd)
-        return f"http://{u_enc}:{p_enc}@{ip}:{port}"
+        ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
+        # آیا اولی آی‌پی است؟ (IP:PORT:USER:PASS)
+        if re.match(ip_pattern, parts[0]) and parts[1].isdigit():
+            ip, port, user, pwd = parts
+        # آیا سومی آی‌پی است؟ (USER:PASS:IP:PORT)
+        elif re.match(ip_pattern, parts[2]) and parts[3].isdigit():
+            user, pwd, ip, port = parts
+        else:
+            user, pwd, ip, port = parts
+            
+        return f"{scheme}://{urllib.parse.quote(user)}:{urllib.parse.quote(pwd)}@{ip}:{port}"
+        
     elif len(parts) == 2:
-        return f"http://{raw_p}"
+        return f"{scheme}://{raw_p}"
+        
     return None
+
 
 def extract_dk_token(phone, acc_data):
     """استخراج چندمرحله‌ای توکن دیجی‌کالا از سشن یا دیتابیس"""
