@@ -1,10 +1,9 @@
-a
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus Panel</title>
+    <title>Nexus | داشبورد مدیریت</title>
     
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -12,185 +11,230 @@ a
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     
     <style>
-        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; color: #1e293b; padding-bottom: 80px; }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f1f5f9; color: #1e293b; padding-bottom: 80px; }
         @media (min-width: 1024px) { body { padding-bottom: 0; } }
-        .corp-card { background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .terminal-box { background: #0f172a; color: #10b981; border-radius: 8px; height: 260px; overflow-y: auto; font-family: monospace; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; }
+        .terminal-box { background: #0f172a; color: #38bdf8; border-radius: 12px; height: 300px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; box-shadow: inset 0 4px 6px rgba(0,0,0,0.3); }
+        
+        /* Modern DataTables Styling */
         table.dataTable { border-collapse: collapse !important; width: 100% !important; font-size: 0.875rem; color: #334155; }
-        table.dataTable thead th { border-bottom: 2px solid #e2e8f0 !important; color: #64748b !important; padding: 12px; text-align: right; font-weight: bold; }
-        table.dataTable tbody tr { transition: background-color 0.2s; border-bottom: 1px solid #f1f5f9 !important; }
-        table.dataTable tbody tr:hover { background-color: #f8fafc !important; }
-        table.dataTable tbody td { padding: 12px; vertical-align: middle; }
+        table.dataTable thead th { border-bottom: 2px solid #e2e8f0 !important; color: #475569 !important; padding: 14px 12px; text-align: right; font-weight: 700; background: #f8fafc; }
+        table.dataTable tbody tr { transition: all 0.2s; border-bottom: 1px solid #f1f5f9 !important; }
+        table.dataTable tbody tr:hover { background-color: #f8fafc !important; transform: scale(1.001); }
+        table.dataTable tbody td { padding: 14px 12px; vertical-align: middle; }
         table.dataTable.no-footer { border-bottom: none !important; }
-        .dataTables_filter input { padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; margin-right: 8px; font-family: inherit; }
-        .tab-btn { border-bottom: 2px solid transparent; }
-        .tab-btn.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
+        .dataTables_filter input { padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; margin-right: 8px; font-family: inherit; transition: border-color 0.2s; }
+        .dataTables_filter input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        /* Segmented Control Tabs */
+        .segment-container { background: #f1f5f9; padding: 4px; border-radius: 12px; display: inline-flex; }
+        .segment-btn { padding: 8px 24px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; color: #64748b; transition: all 0.3s; }
+        .segment-btn.active { background: #ffffff; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        /* Status Badges */
+        .status-badge { display: inline-flex; items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .status-offline { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .status-standby { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .status-active { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
     </style>
 </head>
 <body class="antialiased lg:pb-8">
 
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="h-8 w-8 bg-blue-600 rounded flex items-center justify-center shadow-sm">
-                    <i class="ph-bold ph-hard-drives text-white text-lg"></i>
+            <div class="flex items-center gap-4">
+                <div class="h-10 w-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="ph-bold ph-shield-check text-white text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-base sm:text-lg font-bold text-slate-800">داشبورد نکسوس</h1>
+                    <h1 class="text-lg font-bold text-slate-800 tracking-tight">نکسوس کنترل</h1>
+                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Central Management System</p>
                 </div>
             </div>
-            <a href="/logout" class="text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-2 rounded-lg transition-colors">خروج</a>
+            
+            <div class="flex items-center gap-4">
+                <!-- Engine Live Status -->
+                <div id="engineStatusBadge" class="status-badge status-offline hidden sm:flex items-center gap-2">
+                    <div id="engineStatusDot" class="h-2 w-2 rounded-full bg-rose-500"></div>
+                    <span id="engineStatusText">موتور آفلاین</span>
+                </div>
+                
+                <a href="/logout" class="text-sm font-bold text-slate-500 hover:text-rose-600 transition-colors bg-slate-100 hover:bg-rose-50 px-4 py-2 rounded-lg">خروج</a>
+            </div>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="corp-card p-5">
-                <p class="text-xs font-semibold text-slate-500 mb-1">حساب‌های خام</p>
-                <div class="text-2xl font-black text-slate-800" id="stat-total">0</div>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <p class="text-sm font-semibold text-slate-500">حساب‌های پایه</p>
+                    <i class="ph-bold ph-users text-slate-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-black text-slate-800" id="stat-total">0</div>
             </div>
-            <div class="corp-card p-5 border-emerald-100 bg-emerald-50/20">
-                <p class="text-xs font-semibold text-emerald-700 mb-1">دارای تاریخچه خرید</p>
-                <div class="text-2xl font-black text-emerald-700" id="stat-ordered">0</div>
+            <div class="glass-card p-6 border-blue-100 bg-blue-50/30">
+                <div class="flex justify-between items-start mb-4">
+                    <p class="text-sm font-semibold text-blue-700">دارای تاریخچه خرید</p>
+                    <i class="ph-bold ph-shopping-bag text-blue-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-black text-blue-700" id="stat-ordered">0</div>
             </div>
-            <div class="corp-card p-5">
-                <p class="text-xs font-semibold text-slate-500 mb-1">پروکسی‌های فعال بیگی</p>
-                <div class="text-2xl font-black text-blue-600" id="stat-proxies">بررسی...</div>
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <p class="text-sm font-semibold text-slate-500">پروکسی‌های متصل</p>
+                    <i class="ph-bold ph-globe text-slate-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-black text-slate-800" id="stat-proxies">-</div>
             </div>
-            <div class="corp-card p-5">
-                <p class="text-xs font-semibold text-slate-500 mb-1">وضعیت موتور محلی</p>
-                <div class="flex items-center gap-2 mt-1">
-                    <div id="statusDot" class="h-2.5 w-2.5 rounded-full bg-slate-300"></div>
-                    <span id="statusText" class="text-sm font-bold text-slate-600">آماده‌باش</span>
+            <div class="glass-card p-6 flex flex-col justify-between">
+                <p class="text-sm font-semibold text-slate-500">عملیات سریع</p>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="openExportModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">خروجی‌گیری</button>
+                    <button onclick="openWipeModal()" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 rounded-lg text-xs transition-colors border border-rose-200">فول وایپ</button>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-            <div class="hidden lg:flex lg:col-span-1 flex-col gap-3">
-                <div class="corp-card p-5">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100">عملیات موتور بیگی</h3>
+        <!-- System Controls & Terminal -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+            <div class="hidden lg:flex lg:col-span-1 flex-col gap-4">
+                <div class="glass-card p-6">
+                    <h3 class="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2">
+                        <i class="ph-bold ph-cpu text-blue-600"></i> پنل فرمان موتور
+                    </h3>
                     
-                    <button onclick="triggerAction('start')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl mb-2 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
-                        <i class="ph-bold ph-play"></i> استارت ثبت‌نام
+                    <button onclick="triggerAction('start')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl mb-3 transition-colors flex items-center justify-center gap-2 text-sm shadow-md">
+                        <i class="ph-bold ph-lightning"></i> استارت ساخت اکانت
                     </button>
                     
-                    <button onclick="openCheckerModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl mb-2 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
-                        <i class="ph-bold ph-magnifying-glass"></i> استارت چکر خرید (بازه)
+                    <button onclick="openCheckerModal()" class="w-full bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-3 rounded-xl mb-3 transition-colors flex items-center justify-center gap-2 text-sm">
+                        <i class="ph-bold ph-scan"></i> چکر تاریخچه سفارشات
                     </button>
                     
-                    <button onclick="stopChecker()" class="w-full bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 font-bold py-2.5 rounded-xl mb-3 transition-colors flex items-center justify-center gap-2 text-sm">
-                        <i class="ph-bold ph-stop"></i> توقف فوری چکر
+                    <hr class="border-slate-100 my-4">
+
+                    <button onclick="stopChecker()" class="w-full bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm border border-rose-200">
+                        <i class="ph-bold ph-hand-palm"></i> توقف اضطراری موتور
                     </button>
-                    
-                    <div class="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
-                        <button onclick="openExportModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold py-2 rounded-lg text-xs transition-colors">خروجی داده‌ها</button>
-                        <button onclick="openWipeModal()" class="bg-slate-50 text-rose-600 hover:bg-rose-50 font-bold py-2 rounded-lg text-xs transition-colors">پاکسازی کل</button>
-                    </div>
                 </div>
             </div>
 
-            <div class="col-span-1 lg:col-span-3 corp-card overflow-hidden flex flex-col">
-                <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-600">ترمینال گزارشات و لاگ</span>
-                    <button onclick="clearConsoleLogs()" class="text-xs font-bold text-rose-600 hover:text-rose-800 flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded shadow-sm transition-colors">
-                        <i class="ph-bold ph-trash"></i> پاکسازی لاگ‌ها از دیتابیس
-                    </button>
+            <div class="col-span-1 lg:col-span-3 glass-card overflow-hidden flex flex-col">
+                <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex items-center justify-between">
+                    <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <i class="ph-bold ph-terminal-window text-slate-400"></i> مانیتورینگ سیستم
+                    </span>
+                    <button onclick="clearConsoleLogs()" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">پاکسازی لاگ</button>
                 </div>
-                <div class="terminal-box p-4 text-xs leading-relaxed" id="terminalOutput"></div>
+                <div class="terminal-box p-5 text-sm leading-loose" id="terminalOutput"></div>
             </div>
         </div>
 
-        <div class="corp-card p-5 mb-20 lg:mb-0">
-            <div class="flex gap-6 mb-4 border-b border-slate-200">
-                <button onclick="switchTab('normal')" id="tab-normal" class="tab-btn active pb-3 font-bold text-sm text-slate-500 hover:text-slate-800 transition-colors">لیست خام</button>
-                <button onclick="switchTab('ordered')" id="tab-ordered" class="tab-btn pb-3 font-bold text-sm text-slate-500 hover:text-slate-800 transition-colors">دارای خرید</button>
-            </div>
-            
-            <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs mb-4 w-max">
-                <span class="text-slate-600 font-medium">فیلتر تاریخ:</span>
-                <input type="datetime-local" id="filterStart" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none">
-                <span class="text-slate-400">تا</span>
-                <input type="datetime-local" id="filterEnd" class="bg-white border border-slate-300 rounded px-2 py-1 outline-none">
-                <button onclick="resetDateFilter()" class="bg-slate-200 px-2.5 py-1 rounded text-slate-600 hover:bg-slate-300 font-bold transition-colors">حذف</button>
+        <!-- Data Tables -->
+        <div class="glass-card p-6 mb-20 lg:mb-0">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <!-- Segmented Control -->
+                <div class="segment-container">
+                    <button onclick="switchTab('normal')" id="tab-normal" class="segment-btn active">اکانت‌های پایه</button>
+                    <button onclick="switchTab('ordered')" id="tab-ordered" class="segment-btn">فیلترشده (دارای سفارش)</button>
+                </div>
+                
+                <!-- Date Filter -->
+                <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-xs shadow-sm">
+                    <input type="date" id="filterDate" class="bg-transparent border-none px-2 py-1 outline-none text-slate-600 font-medium">
+                    <button onclick="resetDateFilter()" class="bg-white px-3 py-1.5 rounded-lg text-slate-600 hover:text-rose-500 font-bold shadow-sm transition-colors border border-slate-200"><i class="ph-bold ph-x"></i></button>
+                </div>
             </div>
 
             <div id="wrap-normal" class="overflow-x-auto">
+                <div class="mb-3 text-left">
+                    <button onclick="copyAllLinks('normal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-3 rounded-lg text-xs transition-colors flex items-center gap-1 inline-flex border border-slate-200">
+                        <i class="ph-bold ph-copy"></i> کپی تمام لینک‌ها
+                    </button>
+                </div>
                 <table id="normalTable" class="display nowrap w-full">
-                    <thead><tr><th>ردیف</th><th>موبایل</th><th>پروفایل</th><th>تاریخ ثبت</th><th>لینک ورود</th><th>عملیات</th></tr></thead><tbody></tbody>
+                    <thead><tr><th>ردیف</th><th>موبایل</th><th>نام پروفایل</th><th>زمان ثبت</th><th>درگاه ورود</th><th>حذف</th></tr></thead><tbody></tbody>
                 </table>
             </div>
 
             <div id="wrap-ordered" class="overflow-x-auto hidden">
+                <div class="mb-3 text-left">
+                    <button onclick="copyAllLinks('ordered')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-3 rounded-lg text-xs transition-colors flex items-center gap-1 inline-flex border border-slate-200">
+                        <i class="ph-bold ph-copy"></i> کپی تمام لینک‌ها
+                    </button>
+                </div>
                 <table id="orderedTable" class="display nowrap w-full">
-                    <thead><tr><th>ردیف</th><th>موبایل</th><th>پروفایل</th><th>تاریخ ثبت</th><th>وضعیت خرید</th><th>لینک ورود</th><th>عملیات</th></tr></thead><tbody></tbody>
+                    <thead><tr><th>ردیف</th><th>موبایل</th><th>نام پروفایل</th><th>تعداد سفارش</th><th>درگاه ورود</th><th>حذف</th></tr></thead><tbody></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div class="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-40 px-4 py-2 flex gap-2 pb-safe shadow">
-        <button onclick="triggerAction('start')" class="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-lg flex flex-col items-center gap-1 text-[10px]"><i class="ph-bold ph-play text-base"></i>ثبت‌نام</button>
-        <button onclick="openCheckerModal()" class="flex-1 bg-emerald-600 text-white font-bold py-2.5 rounded-lg flex flex-col items-center gap-1 text-[10px]"><i class="ph-bold ph-magnifying-glass text-base"></i>چکر بازه</button>
-        <button onclick="stopChecker()" class="flex-1 bg-rose-50 text-rose-600 font-bold py-2.5 rounded-lg flex flex-col items-center gap-1 text-[10px] border border-rose-200"><i class="ph-bold ph-stop text-base"></i>توقف</button>
-        <button onclick="clearConsoleLogs()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-lg flex flex-col items-center gap-1 text-[10px]"><i class="ph-bold ph-trash text-base"></i>پاکسازی</button>
+    <!-- Mobile Bottom Navigation -->
+    <div class="lg:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-slate-200 z-40 px-3 py-2 flex gap-2 pb-safe shadow-xl">
+        <button onclick="triggerAction('start')" class="flex-1 bg-slate-900 text-white font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 text-[11px]"><i class="ph-bold ph-lightning text-lg"></i>ساخت</button>
+        <button onclick="openCheckerModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 text-[11px]"><i class="ph-bold ph-scan text-lg"></i>بررسی</button>
+        <button onclick="stopChecker()" class="flex-1 bg-rose-50 text-rose-600 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 text-[11px]"><i class="ph-bold ph-hand-palm text-lg"></i>توقف</button>
     </div>
 
+    <!-- Modals (Checker, Export, Wipe) -->
+    <!-- Checker Modal -->
     <div id="checkerModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-slate-100">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
-                    <i class="ph-bold ph-magnifying-glass text-emerald-600 text-lg"></i> تنظیم بازه چکر
-                </h3>
-                <button onclick="closeCheckerModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-lg text-slate-800">تنظیمات بررسی سفارشات</h3>
+                <button onclick="closeCheckerModal()" class="text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-lg"><i class="ph-bold ph-x"></i></button>
             </div>
             
-            <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-                چکر از پروکسی‌های پورت 2525 آقای بیگی با همان سرعت و وقفه ۱۵ ثانیه‌ای ثبت‌نام استفاده خواهد کرد.
-            </p>
-
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-5">
-                <label class="block text-xs font-bold text-slate-700 mb-2">تعیین محدوده ردیف اکانت‌ها:</label>
-                <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+                <label class="block text-sm font-bold text-slate-700 mb-3">محدوده اسکن اکانت‌ها:</label>
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <span class="text-[11px] text-slate-500 block mb-1">از ردیف:</span>
-                        <input type="number" id="checkerStartIdx" value="1" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-center text-sm font-bold outline-none focus:border-emerald-500">
+                        <span class="text-xs text-slate-500 block mb-1">از ردیف:</span>
+                        <input type="number" id="checkerStartIdx" value="1" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-center text-sm font-bold outline-none focus:border-blue-500">
                     </div>
                     <div>
-                        <span class="text-[11px] text-slate-500 block mb-1">تا ردیف:</span>
-                        <input type="number" id="checkerEndIdx" value="200" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-center text-sm font-bold outline-none focus:border-emerald-500">
+                        <span class="text-xs text-slate-500 block mb-1">تا ردیف:</span>
+                        <input type="number" id="checkerEndIdx" value="200" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-center text-sm font-bold outline-none focus:border-blue-500">
                     </div>
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <button onclick="closeCheckerModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">انصراف</button>
-                <button onclick="submitChecker()" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md">شروع چکر</button>
+            <button onclick="submitChecker()" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-colors">اجرای اسکنر</button>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="font-bold text-lg text-slate-800">استخراج داده‌ها</h3>
+                <button onclick="closeExportModal()" class="text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-lg"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button onclick="exportData('raw_links')" class="text-right p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50 font-bold text-sm text-slate-700 transition-colors flex justify-between items-center">فقط لینک‌های لاگین <i class="ph-bold ph-file-text text-slate-400"></i></button>
+                <button onclick="exportData('links_phone')" class="text-right p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50 font-bold text-sm text-slate-700 transition-colors flex justify-between items-center">شماره موبایل + لینک <i class="ph-bold ph-list-numbers text-slate-400"></i></button>
+                <button onclick="exportData('json')" class="text-right p-3.5 rounded-xl border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 font-bold text-sm text-slate-700 transition-colors flex justify-between items-center">فایل ساختاریافته (JSON) <i class="ph-bold ph-brackets-curly text-slate-400"></i></button>
             </div>
         </div>
     </div>
 
-    <div id="exportModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-sm p-6 shadow-xl">
-            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-base text-slate-800">استخراج داده‌ها</h3><button onclick="closeExportModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button></div>
-            <div class="flex flex-col gap-2">
-                <button onclick="exportData('raw_links')" class="text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-700">۱. فقط لینک‌ها (TXT)</button>
-                <button onclick="exportData('links_phone')" class="text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-700">۲. لینک همراه با شماره (TXT)</button>
-                <button onclick="exportData('numbered_links')" class="text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-700">۳. لیست شماره‌دار (TXT)</button>
-                <button onclick="exportData('json')" class="text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-700">۴. فول بکاپ دیتابیس (JSON)</button>
+    <!-- Wipe Modal -->
+    <div id="wipeModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl border-t-4 border-rose-600">
+            <div class="mx-auto w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4">
+                <i class="ph-bold ph-warning text-2xl text-rose-600"></i>
             </div>
-        </div>
-    </div>
-
-    <div id="wipeModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-sm p-6 text-center shadow-xl border-t-4 border-rose-500">
-            <h3 class="font-bold text-base text-slate-900 mb-2">پاکسازی کامل دیتابیس</h3>
-            <p class="text-xs text-slate-500 mb-4">جهت حذف کل رکوردها کلمه <span class="font-mono text-rose-600 font-bold">NEXUS-WIPE-ALL</span> را وارد کنید.</p>
-            <input type="text" id="wipeConfirmInput" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-center mb-4 font-mono outline-none focus:border-rose-500 text-sm">
-            <div class="flex gap-2">
-                <button onclick="closeWipeModal()" class="flex-1 py-2 rounded-lg bg-slate-100 text-slate-600 font-bold text-xs">انصراف</button>
-                <button onclick="confirmWipe()" class="flex-1 py-2 rounded-lg bg-rose-600 text-white font-bold text-xs">حذف قطعی</button>
+            <h3 class="font-bold text-lg text-slate-900 mb-2">ریست کلی دیتابیس</h3>
+            <p class="text-sm text-slate-500 mb-5 leading-relaxed">جهت تأیید حذف غیرقابل بازگشت تمامی رکوردها و لاگ‌ها، عبارت <span class="font-mono text-rose-600 font-bold select-all bg-rose-50 px-1 rounded">NEXUS-WIPE-ALL</span> را وارد کنید.</p>
+            <input type="text" id="wipeConfirmInput" placeholder="NEXUS-WIPE-ALL" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-center mb-5 font-mono outline-none focus:border-rose-500 text-sm bg-slate-50">
+            <div class="flex gap-3">
+                <button onclick="closeWipeModal()" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm transition-colors hover:bg-slate-200">انصراف</button>
+                <button onclick="confirmWipe()" class="flex-1 py-3 rounded-xl bg-rose-600 text-white font-bold text-sm transition-colors hover:bg-rose-700 shadow-md">اجرای عملیات</button>
             </div>
         </div>
     </div>
@@ -202,71 +246,92 @@ a
         let currentTab = 'normal', tNormal, tOrdered;
 
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            const min = document.getElementById('filterStart').value ? new Date(document.getElementById('filterStart').value).getTime() : null;
-            const max = document.getElementById('filterEnd').value ? new Date(document.getElementById('filterEnd').value).getTime() : null;
-            if(!min && !max) return true;
-            const rowDate = data[3] ? new Date(data[3].replace(' ', 'T')).getTime() : null;
-            return !(rowDate && ((min && rowDate < min) || (max && rowDate > max)));
+            const filterVal = document.getElementById('filterDate').value;
+            if(!filterVal) return true;
+            const rowDateStr = data[3]; // Date column
+            if(!rowDateStr) return true;
+            return rowDateStr.includes(filterVal); // Simple substring match for YYYY-MM-DD
         });
 
         $(document).ready(function() {
-            const opts = { language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" }, pageLength: 10, order: [[0, 'asc']] };
+            const opts = { 
+                language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" }, 
+                pageLength: 10, 
+                order: [[0, 'asc']],
+                dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 mb-4"lf>rt<"flex flex-col sm:flex-row justify-between items-center mt-4"ip>'
+            };
             
             tNormal = $('#normalTable').DataTable({ ...opts,
                 columns: [
-                    { data: 'index', render: d => `<span class="text-slate-400 font-mono text-xs">${d}</span>` },
-                    { data: 'phone', render: d => `<span class="font-mono font-semibold text-slate-700">${d}</span>` },
-                    { data: 'name', render: d => `<span class="text-slate-800">${d}</span>` },
+                    { data: 'index', render: d => `<span class="text-slate-400 font-mono text-xs font-bold">${d}</span>` },
+                    { data: 'phone', render: d => `<span class="font-mono font-bold text-slate-700">${d}</span>` },
+                    { data: 'name', render: d => `<span class="text-slate-800 font-medium">${d}</span>` },
                     { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
-                    { data: 'link', render: d => `<div class="flex items-center gap-1"><input type="text" readonly value="${d}" class="text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1 w-24 sm:w-32 outline-none cursor-pointer" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs font-bold">کپی</button></div>` },
-                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-rose-500"><i class="ph-bold ph-trash text-base"></i></button>` }
+                    { data: 'link', render: d => `<div class="flex items-center gap-2"><input type="text" readonly value="${d}" class="text-[11px] font-mono text-slate-500 bg-white border border-slate-200 rounded-md px-2 py-1.5 w-32 sm:w-48 outline-none cursor-pointer focus:border-blue-400" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 px-2 py-1.5 rounded-md text-xs font-bold transition-colors border border-slate-200">کپی</button></div>` },
+                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-slate-50 rounded"><i class="ph-bold ph-trash text-base"></i></button>` }
                 ], ajax: { url: '/api/accounts/normal', dataSrc: 'data' }
             });
 
             tOrdered = $('#orderedTable').DataTable({ ...opts,
                 columns: [
-                    { data: 'index', render: d => `<span class="text-slate-400 font-mono text-xs">${d}</span>` },
-                    { data: 'phone', render: d => `<span class="font-mono font-semibold text-slate-700">${d}</span>` },
-                    { data: 'name', render: d => `<span class="text-slate-800">${d}</span>` },
-                    { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
-                    { data: 'total_orders', render: d => `<span class="bg-emerald-100 text-emerald-700 font-bold text-xs px-2 py-1 rounded-md">بله (${d} سفارش)</span>` },
-                    { data: 'link', render: d => `<div class="flex items-center gap-1"><input type="text" readonly value="${d}" class="text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1 w-24 sm:w-32 outline-none cursor-pointer" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs font-bold">کپی</button></div>` },
-                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-rose-500"><i class="ph-bold ph-trash text-base"></i></button>` }
+                    { data: 'index', render: d => `<span class="text-slate-400 font-mono text-xs font-bold">${d}</span>` },
+                    { data: 'phone', render: d => `<span class="font-mono font-bold text-slate-700">${d}</span>` },
+                    { data: 'name', render: d => `<span class="text-slate-800 font-medium">${d}</span>` },
+                    { data: 'total_orders', render: d => `<span class="bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs px-2.5 py-1 rounded-full">${d} سفارش</span>` },
+                    { data: 'link', render: d => `<div class="flex items-center gap-2"><input type="text" readonly value="${d}" class="text-[11px] font-mono text-slate-500 bg-white border border-slate-200 rounded-md px-2 py-1.5 w-32 sm:w-48 outline-none cursor-pointer focus:border-blue-400" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 px-2 py-1.5 rounded-md text-xs font-bold transition-colors border border-slate-200">کپی</button></div>` },
+                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-slate-50 rounded"><i class="ph-bold ph-trash text-base"></i></button>` }
                 ], ajax: { url: '/api/accounts/ordered', dataSrc: 'data' }
             });
-            $('#filterStart, #filterEnd').on('change', () => { tNormal.draw(); tOrdered.draw(); });
+            $('#filterDate').on('change', () => { tNormal.draw(); tOrdered.draw(); });
         });
 
         function switchTab(tab) {
             currentTab = tab;
-            $('.tab-btn').removeClass('active').addClass('text-slate-500');$(`#tab-${tab}`).addClass('active').removeClass('text-slate-500');
+            $('.segment-btn').removeClass('active');$(`#tab-${tab}`).addClass('active');
             if (tab === 'normal') { $('#wrap-normal').show(); $('#wrap-ordered').hide(); } 
             else { $('#wrap-normal').hide(); $('#wrap-ordered').show(); }
         }
 
-        function resetDateFilter() { document.getElementById('filterStart').value = ''; document.getElementById('filterEnd').value = ''; tNormal.draw(); tOrdered.draw(); }
+        function resetDateFilter() { document.getElementById('filterDate').value = ''; tNormal.draw(); tOrdered.draw(); }
+
+        function copyAllLinks(type) {
+            const activeTable = type === 'normal' ? tNormal : tOrdered;
+            const rows = activeTable.rows({ search: 'applied' }).data().toArray();
+            if (rows.length === 0) return alert('داده‌ای برای کپی وجود ندارد.');
+            const links = rows.map(r => r.link).join('\n');
+            navigator.clipboard.writeText(links).then(() => alert(`${rows.length} لینک در کلیپ‌بورد کپی شد.`));
+        }
+
+        function updateEngineBadge(status) {
+            const badge = document.getElementById('engineStatusBadge');
+            const dot = document.getElementById('engineStatusDot');
+            const text = document.getElementById('engineStatusText');
+            
+            badge.className = 'status-badge hidden sm:flex items-center gap-2 transition-all';
+            
+            if (status === 'Offline') {
+                badge.classList.add('status-offline');
+                dot.className = 'h-2 w-2 rounded-full bg-rose-500';
+                text.innerText = 'موتور آفلاین';
+            } else if (status === 'Standby') {
+                badge.classList.add('status-standby');
+                dot.className = 'h-2 w-2 rounded-full bg-blue-500';
+                text.innerText = 'آماده دریافت فرمان';
+            } else {
+                badge.classList.add('status-active');
+                dot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse';
+                text.innerText = status === 'Registering' ? 'در حال ثبت‌نام' : 'در حال اسکن';
+            }
+        }
 
         function fetchStats() {
             fetch('/api/stats').then(res => res.json()).then(data => {
                 document.getElementById('stat-total').innerText = data.total_accounts;
                 document.getElementById('stat-ordered').innerText = data.ordered_accounts;
-                document.getElementById('stat-proxies').innerText = data.active_proxies === null ? "قطع" : data.active_proxies;
-
-                const sDot = document.getElementById('statusDot'), sTxt = document.getElementById('statusText');
-                if (data.system_status === 'Registering') {
-                    sDot.className = 'h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse';
-                    sTxt.innerText = 'در حال ثبت‌نام محلی';
-                    sTxt.className = 'text-sm font-bold text-blue-600';
-                } else if (data.system_status === 'Checking') {
-                    sDot.className = 'h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse';
-                    sTxt.innerText = 'در حال بررسی خریدها...';
-                    sTxt.className = 'text-sm font-bold text-emerald-600';
-                } else {
-                    sDot.className = 'h-2.5 w-2.5 rounded-full bg-slate-300';
-                    sTxt.innerText = 'آماده‌باش';
-                    sTxt.className = 'text-sm font-bold text-slate-600';
-                }
-            });
+                document.getElementById('stat-proxies').innerText = data.active_proxies === 0 ? "قطع/آفلاین" : data.active_proxies;
+                
+                updateEngineBadge(data.system_status);
+            }).catch(() => updateEngineBadge('Offline'));
         }
 
         let lastLogs = "";
@@ -275,11 +340,11 @@ a
                 const logsStr = JSON.stringify(data.logs);
                 if (logsStr !== lastLogs) {
                     const out = document.getElementById('terminalOutput'); out.innerHTML = '';
-                    if(data.logs.length === 0) out.innerHTML = '<span class="text-slate-500">کنسول خالی است...</span>';
+                    if(data.logs.length === 0) out.innerHTML = '<span class="text-slate-600 opacity-50">منتظر دریافت رویدادهای سیستم...</span>';
                     data.logs.forEach(l => { 
-                        const div = document.createElement('div'); div.className = 'mb-1 font-mono'; 
+                        const div = document.createElement('div'); div.className = 'mb-1.5 flex gap-2'; 
                         let color = l.message.includes('❌') || l.message.includes('⛔') ? 'text-rose-400' : (l.message.includes('✅') || l.message.includes('🎯') ? 'text-emerald-400' : 'text-slate-300');
-                        div.innerHTML = `<span class="text-slate-500">[${l.timestamp}] ></span> <span class="${color}">${l.message}</span>`; 
+                        div.innerHTML = `<span class="text-slate-500 opacity-50 shrink-0">[${l.timestamp}]</span> <span class="${color}">${l.message}</span>`; 
                         out.appendChild(div); 
                     });
                     out.scrollTop = out.scrollHeight; lastLogs = logsStr;
@@ -305,36 +370,30 @@ a
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ start_idx: startVal, end_idx: endVal })
             }).then(res => res.json()).then(data => {
-                alert(data.message);
                 closeCheckerModal();
                 fetchStats();
             });
         }
 
         function stopChecker() {
-            if(confirm('آیا از توقف فوری چکر اطمینان دارید؟')) {
-                fetch('/api/checker/stop', { method: 'POST' }).then(res => res.json()).then(data => {
-                    alert(data.message);
-                    fetchStats();
-                });
-            }
+            fetch('/api/checker/stop', { method: 'POST' }).then(res => res.json()).then(data => {
+                fetchStats();
+            });
         }
 
         function clearConsoleLogs() {
-            if(confirm('آیا از پاکسازی کنسول و تمام لاگ‌ها از دیتابیس اطمینان دارید؟')) {
-                fetch('/api/action/clear_logs', { method: 'POST' }).then(res => res.json()).then(data => {
-                    document.getElementById('terminalOutput').innerHTML = '<span class="text-slate-500">کنسول پاکسازی شد...</span>';
-                    lastLogs = "";
-                    fetchStats();
-                });
-            }
+            fetch('/api/action/clear_logs', { method: 'POST' }).then(res => res.json()).then(data => {
+                document.getElementById('terminalOutput').innerHTML = '<span class="text-slate-600 opacity-50">لاگ‌ها پاکسازی شدند.</span>';
+                lastLogs = "";
+                fetchStats();
+            });
         }
 
         function openWipeModal() { document.getElementById('wipeConfirmInput').value = ''; document.getElementById('wipeModal').classList.remove('hidden'); }
         function closeWipeModal() { document.getElementById('wipeModal').classList.add('hidden'); }
         function confirmWipe() {
             fetch('/api/action/clean', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({code: document.getElementById('wipeConfirmInput').value}) })
-            .then(res => res.json()).then(data => { alert(data.message); closeWipeModal(); tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); fetchStats(); });
+            .then(res => res.json()).then(data => { if(data.status==='error') alert(data.message); closeWipeModal(); tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); fetchStats(); });
         }
 
         function openExportModal() { document.getElementById('exportModal').classList.remove('hidden'); }
@@ -343,13 +402,12 @@ a
             const activeTable = currentTab === 'normal' ? tNormal : tOrdered;
             const rows = activeTable.rows({ search: 'applied' }).data().toArray();
             if (rows.length === 0) return alert('داده‌ای وجود ندارد.');
-            let content = "", name = `Nexus_${currentTab}_${type}.txt`, mime = "text/plain;charset=utf-8";
+            let content = "", name = `Export_${currentTab}_${type}.txt`, mime = "text/plain;charset=utf-8";
             if (type === 'raw_links') content = rows.map(r => r.link).join('\n');
             else if (type === 'links_phone') content = rows.map(r => `${r.phone} - ${r.link}`).join('\n');
-            else if (type === 'numbered_links') content = rows.map((r, i) => `${i + 1}. ${r.link}`).join('\n');
-            else if (type === 'json') { content = JSON.stringify(rows, null, 2); name = `Nexus_${currentTab}.json`; mime = "application/json;charset=utf-8"; }
+            else if (type === 'json') { content = JSON.stringify(rows, null, 2); name = `Export_${currentTab}.json`; mime = "application/json;charset=utf-8"; }
             const blob = new Blob([content], { type: mime }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; link.click(); closeExportModal();
         }
     </script>
 </body>
-</html>
+                    </html>
