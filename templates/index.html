@@ -1,413 +1,253 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus | داشبورد مدیریت</title>
-    
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    
-    <style>
-        body { font-family: 'Vazirmatn', sans-serif; background-color: #f1f5f9; color: #1e293b; padding-bottom: 80px; }
-        @media (min-width: 1024px) { body { padding-bottom: 0; } }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; }
-        .terminal-box { background: #0f172a; color: #38bdf8; border-radius: 12px; height: 300px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; box-shadow: inset 0 4px 6px rgba(0,0,0,0.3); }
-        
-        /* Modern DataTables Styling */
-        table.dataTable { border-collapse: collapse !important; width: 100% !important; font-size: 0.875rem; color: #334155; }
-        table.dataTable thead th { border-bottom: 2px solid #e2e8f0 !important; color: #475569 !important; padding: 14px 12px; text-align: right; font-weight: 700; background: #f8fafc; }
-        table.dataTable tbody tr { transition: all 0.2s; border-bottom: 1px solid #f1f5f9 !important; }
-        table.dataTable tbody tr:hover { background-color: #f8fafc !important; transform: scale(1.001); }
-        table.dataTable tbody td { padding: 14px 12px; vertical-align: middle; }
-        table.dataTable.no-footer { border-bottom: none !important; }
-        .dataTables_filter input { padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; margin-right: 8px; font-family: inherit; transition: border-color 0.2s; }
-        .dataTables_filter input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        
-        /* Segmented Control Tabs */
-        .segment-container { background: #f1f5f9; padding: 4px; border-radius: 12px; display: inline-flex; }
-        .segment-btn { padding: 8px 24px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; color: #64748b; transition: all 0.3s; }
-        .segment-btn.active { background: #ffffff; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        
-        /* Status Badges */
-        .status-badge { display: inline-flex; items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-        .status-offline { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-        .status-standby { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .status-active { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>پنل مدیریت Bridge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #152238; --muted: #6c7b91; --line: #e4eaf2; --surface: #fff;
+      --canvas: #f5f7fb; --blue: #2563eb; --blue-soft: #eff6ff; --green: #16845b;
+      --green-soft: #eaf8f1; --red: #c33a35; --red-soft: #fff1f0; --amber: #a56308;
+      --shadow: 0 8px 28px rgba(30, 51, 80, .055);
+      font-family: Vazirmatn, Tahoma, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .layout { min-height: 100vh; display: flex; }
+    .sidebar { width: 248px; flex: 0 0 248px; min-height: 100vh; background: #132238; color: #fff; padding: 24px 16px;
+      display: flex; flex-direction: column; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 28px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .brand-mark { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: #3478ed;
+      font-size: 17px; font-weight: 800; }
+    .brand strong { display: block; font-size: 15px; }
+    .brand small { display: block; color: #98a8bf; font-size: 10px; margin-top: 2px; }
+    .nav-title { color: #778aa7; font-size: 10px; font-weight: 700; margin: 28px 12px 9px; }
+    .nav-btn { width: 100%; border: 0; background: transparent; color: #b9c6d8; border-radius: 9px; display: flex;
+      align-items: center; gap: 10px; text-align: right; padding: 11px 12px; font-size: 13px; margin-bottom: 3px; }
+    .nav-btn:hover, .nav-btn.active { color: #fff; background: #203653; }
+    .nav-icon { width: 20px; text-align: center; color: #8ca5c7; font-size: 15px; }
+    .nav-btn.active .nav-icon { color: #70a1ff; }
+    .side-footer { margin-top: auto; background: #1b2e49; border-radius: 12px; padding: 13px; color: #aebdd1; font-size: 11px; line-height: 1.8; }
+    .side-footer b { color: #e7eef8; display: block; font-size: 12px; }
+    .main { flex: 1; min-width: 0; }
+    .topbar { height: 72px; background: var(--surface); border-bottom: 1px solid var(--line); display: flex; align-items: center;
+      justify-content: space-between; padding: 0 32px; }
+    .page-title { font-size: 18px; font-weight: 800; margin: 0 0 3px; }
+    .page-subtitle { margin: 0; color: var(--muted); font-size: 11px; }
+    .top-actions { display: flex; align-items: center; gap: 16px; }
+    .connection { display: flex; align-items: center; gap: 7px; color: var(--green); font-size: 11px; font-weight: 700; }
+    .connection-dot { width: 8px; height: 8px; border-radius: 50%; background: #2db77d; box-shadow: 0 0 0 4px #def6ea; }
+    .connection.offline { color: var(--red); } .connection.offline .connection-dot { background: #de514b; box-shadow: 0 0 0 4px #ffe1df; }
+    .logout { text-decoration: none; color: var(--muted); font-size: 12px; font-weight: 700; border-right: 1px solid var(--line); padding-right: 16px; }
+    .logout:hover { color: var(--red); }
+    .content { max-width: 1450px; padding: 28px 32px 46px; margin: 0 auto; }
+    .view { display: none; } .view.active { display: block; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow); }
+    .stat { padding: 18px 20px; position: relative; overflow: hidden; }
+    .stat:after { content: ""; width: 55px; height: 55px; border-radius: 50%; position: absolute; left: -18px; bottom: -24px; background: var(--blue-soft); }
+    .stat-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .stat-number { margin-top: 11px; font-size: 27px; font-weight: 800; letter-spacing: -.5px; }
+    .stat-foot { color: var(--muted); font-size: 10px; margin-top: 7px; }
+    .stat-icon { position: absolute; left: 18px; top: 19px; width: 30px; height: 30px; border-radius: 9px; background: var(--blue-soft);
+      color: var(--blue); display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+    .stat:nth-child(2) .stat-icon, .stat:nth-child(2):after { color: var(--green); background: var(--green-soft); }
+    .stat:nth-child(3) .stat-icon, .stat:nth-child(3):after { color: var(--amber); background: #fff7e6; }
+    .stat:nth-child(4) .stat-icon, .stat:nth-child(4):after { color: #7657bb; background: #f3efff; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .section-title { font-size: 14px; font-weight: 800; margin: 0; }
+    .section-note { font-size: 11px; color: var(--muted); margin: 4px 0 0; }
+    .btn { border: 1px solid transparent; border-radius: 8px; padding: 9px 13px; font-size: 11px; font-weight: 700; }
+    .btn-primary { color: white; background: var(--blue); } .btn-primary:hover { background: #1d4ed8; }
+    .btn-light { color: #44536a; background: #fff; border-color: var(--line); } .btn-light:hover { background: #f5f8fc; }
+    .btn-danger { color: var(--red); background: var(--red-soft); border-color: #ffd5d2; }
+    .btn-danger:hover { background: #ffe4e1; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .overview-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); gap: 18px; margin-bottom: 24px; }
+    .engine-card, .log-card { padding: 20px; }
+    .engine-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+    .engine-action { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 12px; text-align: right; color: var(--ink); }
+    .engine-action:hover { border-color: #a9c5fb; background: var(--blue-soft); }
+    .engine-action strong { display: block; font-size: 12px; margin-bottom: 4px; } .engine-action span { color: var(--muted); font-size: 10px; }
+    .engine-action.primary { color: #fff; background: #172b47; border-color: #172b47; }
+    .engine-action.primary span { color: #b8c6d9; } .engine-action.primary:hover { background: #1e3a5f; }
+    .status-line { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 9px; background: #f7f9fc; }
+    .status-point { width: 10px; height: 10px; border-radius: 50%; background: #95a3b7; }
+    .status-point.active { background: #2aad77; box-shadow: 0 0 0 5px #def6ea; }
+    .status-point.busy { background: #e6a72f; box-shadow: 0 0 0 5px #fff0d0; }
+    .status-line strong { font-size: 12px; display: block; } .status-line small { color: var(--muted); font-size: 10px; }
+    .log-card { min-height: 245px; }
+    .logs { background: #17263b; color: #dbe6f5; border-radius: 9px; height: 165px; overflow: auto; padding: 12px;
+      font: 11px/2.05 ui-monospace, SFMono-Regular, Menlo, monospace; direction: ltr; text-align: left; }
+    .log-row { white-space: pre-wrap; overflow-wrap: anywhere; } .log-time { color: #7186a3; margin-right: 7px; }
+    .toolbar { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); }
+    .tabs { display: flex; gap: 4px; background: #f0f3f8; border-radius: 8px; padding: 3px; }
+    .tab { border: 0; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; border-radius: 6px; padding: 8px 12px; }
+    .tab.active { color: var(--ink); background: #fff; box-shadow: 0 1px 4px rgba(20,32,51,.08); }
+    .toolbar-tools { display: flex; align-items: center; gap: 8px; }
+    .search { width: 215px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; outline: 0; font-size: 11px; }
+    .search:focus { border-color: #8db2f8; box-shadow: 0 0 0 3px #e8f0ff; }
+    .table-wrap { overflow-x: auto; } table { width: 100%; border-collapse: collapse; min-width: 820px; }
+    th { background: #fbfcfe; color: var(--muted); font-size: 10px; font-weight: 700; padding: 12px 17px; text-align: right; white-space: nowrap; }
+    td { border-top: 1px solid #eef2f7; padding: 13px 17px; font-size: 11px; vertical-align: middle; white-space: nowrap; }
+    tbody tr:hover { background: #fbfdff; } .phone { direction: ltr; text-align: right; font-weight: 700; font-family: ui-monospace, monospace; }
+    .muted { color: var(--muted); } .name { font-weight: 600; } .row-index { color: #9aa8ba; font-family: monospace; }
+    .link-cell { display: flex; gap: 6px; align-items: center; direction: ltr; }
+    .link-value { max-width: 245px; overflow: hidden; text-overflow: ellipsis; direction: ltr; color: #56677e; font: 10px ui-monospace, monospace; }
+    .copy-btn, .more-btn { border: 1px solid var(--line); background: #fff; color: #506078; padding: 6px 8px; border-radius: 6px; font-size: 10px; }
+    .copy-btn:hover, .more-btn:hover { border-color: #9abaf5; color: var(--blue); background: var(--blue-soft); }
+    .pill { display: inline-flex; border-radius: 20px; padding: 5px 8px; font-size: 10px; font-weight: 700; }
+    .pill-green { color: var(--green); background: var(--green-soft); } .pill-gray { color: var(--muted); background: #f0f3f7; }
+    .empty { padding: 45px 20px; text-align: center; color: var(--muted); font-size: 12px; }
+    .table-foot { display: flex; justify-content: space-between; padding: 12px 17px; color: var(--muted); font-size: 10px; border-top: 1px solid var(--line); }
+    .database-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .db-summary { padding: 20px; } .db-summary-number { font-size: 32px; font-weight: 800; margin: 13px 0 4px; }
+    .db-list { overflow: hidden; } .db-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 18px; border-top: 1px solid #eef2f7; }
+    .db-row:first-child { border-top: 0; } .db-label { font-size: 12px; font-weight: 700; } .db-key { color: var(--muted); font: 10px ui-monospace, monospace; margin-top: 4px; direction: ltr; text-align: right; }
+    .db-count { color: var(--blue); background: var(--blue-soft); border-radius: 6px; padding: 5px 8px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(15, 28, 47, .48); display: none; place-items: center; padding: 20px; }
+    .modal-backdrop.open { display: grid; } .modal { width: min(100%, 440px); background: #fff; border-radius: 14px; padding: 22px; box-shadow: 0 22px 70px rgba(0,0,0,.2); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .modal h3 { font-size: 15px; margin: 0; } .close { border: 0; background: #f3f5f8; color: var(--muted); border-radius: 7px; width: 28px; height: 28px; }
+    .field { margin-bottom: 14px; } .field label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+    .field input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; outline: 0; font-size: 12px; }
+    .field input:focus { border-color: #8db2f8; } .modal-help { color: var(--muted); font-size: 11px; line-height: 1.8; margin: 0 0 15px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    .toast { position: fixed; bottom: 22px; right: 24px; z-index: 30; background: #162a45; color: white; border-radius: 9px; padding: 12px 15px;
+      font-size: 11px; box-shadow: 0 10px 28px rgba(10,25,48,.2); opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); } .toast.error { background: #a92f2b; }
+    @media (max-width: 1050px) { .sidebar { width: 210px; flex-basis: 210px; } .content, .topbar { padding-left: 22px; padding-right: 22px; } .overview-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { .layout { display: block; } .sidebar { min-height: 0; width: 100%; height: auto; padding: 12px 14px; }
+      .brand { padding: 0 5px 12px; } .nav-title, .side-footer { display: none; } .nav { display: flex; gap: 4px; overflow-x: auto; padding-top: 10px; }
+      .nav-btn { width: auto; flex: 0 0 auto; margin: 0; padding: 9px 11px; } .nav-btn span:not(.nav-icon) { display: none; }
+      .topbar { height: auto; padding: 18px 16px; } .connection { display: none; } .content { padding: 18px 14px 30px; }
+      .stats { grid-template-columns: 1fr 1fr; gap: 10px; } .stat { padding: 14px; } .stat-icon { display: none; }
+      .toolbar { align-items: stretch; flex-direction: column; } .toolbar-tools { width: 100%; } .search { flex: 1; width: auto; }
+      .database-grid { grid-template-columns: 1fr; } .engine-actions { grid-template-columns: 1fr; } .toast { right: 14px; left: 14px; bottom: 14px; text-align: center; }
+    }
+  </style>
 </head>
-<body class="antialiased lg:pb-8">
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">B</div><div><strong>Bridge Panel</strong><small>پنل مدیریت سرویس</small></div></div>
+      <div class="nav-title">بخش‌های پنل</div>
+      <nav class="nav">
+        <button class="nav-btn active" data-view="dashboard"><span class="nav-icon">⌂</span><span>نمای کلی</span></button>
+        <button class="nav-btn" data-view="accounts"><span class="nav-icon">▣</span><span>حساب‌ها و لینک‌ها</span></button>
+        <button class="nav-btn" data-view="database"><span class="nav-icon">◫</span><span>وضعیت دیتابیس</span></button>
+      </nav>
+      <div class="side-footer"><b>وضعیت سرویس</b><span id="side-status">در حال دریافت وضعیت…</span></div>
+    </aside>
 
-    <!-- Header -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="h-10 w-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="ph-bold ph-shield-check text-white text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold text-slate-800 tracking-tight">نکسوس کنترل</h1>
-                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Central Management System</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-4">
-                <!-- Engine Live Status -->
-                <div id="engineStatusBadge" class="status-badge status-offline hidden sm:flex items-center gap-2">
-                    <div id="engineStatusDot" class="h-2 w-2 rounded-full bg-rose-500"></div>
-                    <span id="engineStatusText">موتور آفلاین</span>
-                </div>
-                
-                <a href="/logout" class="text-sm font-bold text-slate-500 hover:text-rose-600 transition-colors bg-slate-100 hover:bg-rose-50 px-4 py-2 rounded-lg">خروج</a>
-            </div>
-        </div>
-    </header>
+    <main class="main">
+      <header class="topbar">
+        <div><h1 class="page-title" id="page-title">نمای کلی</h1><p class="page-subtitle" id="page-subtitle">وضعیت موتور و داده‌های اصلی سرویس</p></div>
+        <div class="top-actions"><div class="connection" id="connection"><span class="connection-dot"></span><span>اتصال دیتابیس برقرار است</span></div><a class="logout" href="/logout">خروج</a></div>
+      </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <div class="glass-card p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <p class="text-sm font-semibold text-slate-500">حساب‌های پایه</p>
-                    <i class="ph-bold ph-users text-slate-400 text-xl"></i>
-                </div>
-                <div class="text-3xl font-black text-slate-800" id="stat-total">0</div>
-            </div>
-            <div class="glass-card p-6 border-blue-100 bg-blue-50/30">
-                <div class="flex justify-between items-start mb-4">
-                    <p class="text-sm font-semibold text-blue-700">دارای تاریخچه خرید</p>
-                    <i class="ph-bold ph-shopping-bag text-blue-400 text-xl"></i>
-                </div>
-                <div class="text-3xl font-black text-blue-700" id="stat-ordered">0</div>
-            </div>
-            <div class="glass-card p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <p class="text-sm font-semibold text-slate-500">پروکسی‌های متصل</p>
-                    <i class="ph-bold ph-globe text-slate-400 text-xl"></i>
-                </div>
-                <div class="text-3xl font-black text-slate-800" id="stat-proxies">-</div>
-            </div>
-            <div class="glass-card p-6 flex flex-col justify-between">
-                <p class="text-sm font-semibold text-slate-500">عملیات سریع</p>
-                <div class="flex gap-2 mt-3">
-                    <button onclick="openExportModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">خروجی‌گیری</button>
-                    <button onclick="openWipeModal()" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 rounded-lg text-xs transition-colors border border-rose-200">فول وایپ</button>
-                </div>
-            </div>
-        </div>
+      <div class="content">
+        <section id="view-dashboard" class="view active">
+          <div class="stats">
+            <div class="card stat"><span class="stat-label">حساب‌های پایه</span><div class="stat-number" id="stat-total">—</div><div class="stat-foot">حساب‌های آماده در دیتابیس</div><div class="stat-icon">ح</div></div>
+            <div class="card stat"><span class="stat-label">حساب‌های دارای سفارش</span><div class="stat-number" id="stat-ordered">—</div><div class="stat-foot">منتقل‌شده توسط بررسی سفارش</div><div class="stat-icon">س</div></div>
+            <div class="card stat"><span class="stat-label">پروکسی‌های فعال</span><div class="stat-number" id="stat-proxies">—</div><div class="stat-foot">آخرین مقدار دریافت‌شده از موتور</div><div class="stat-icon">پ</div></div>
+            <div class="card stat"><span class="stat-label">صف‌های در انتظار</span><div class="stat-number" id="stat-queue">—</div><div class="stat-foot">حساب جدید و فرمان موتور</div><div class="stat-icon">×</div></div>
+          </div>
+          <div class="overview-grid">
+            <section class="card engine-card">
+              <div class="section-head"><div><h2 class="section-title">کنترل موتور</h2><p class="section-note">فرمان‌ها مستقیماً در صف Redis قرار می‌گیرند.</p></div></div>
+              <div class="status-line"><span id="engine-point" class="status-point"></span><div><strong id="engine-status">در حال دریافت وضعیت</strong><small id="engine-detail">—</small></div></div>
+              <div class="engine-actions">
+                <button class="engine-action primary" id="start-btn" onclick="startBulk()"><strong>شروع ثبت‌نام</strong><span>ارسال فرمان START_BULK</span></button>
+                <button class="engine-action" onclick="openChecker()"><strong>بررسی سفارش‌ها</strong><span>انتخاب بازهٔ حساب‌ها</span></button>
+                <button class="engine-action" onclick="stopChecker()"><strong>توقف بررسی</strong><span>ارسال سیگنال توقف</span></button>
+                <button class="engine-action" onclick="clearLogs()"><strong>پاک‌کردن گزارش‌ها</strong><span>حذف لاگ‌های مدیریتی</span></button>
+              </div>
+            </section>
+            <section class="card log-card"><div class="section-head"><div><h2 class="section-title">آخرین گزارش‌ها</h2><p class="section-note">رویدادهای ثبت‌شده توسط موتور</p></div><button class="btn btn-light" onclick="loadLogs()">به‌روزرسانی</button></div><div class="logs" id="logs"><div class="muted">در حال دریافت گزارش‌ها…</div></div></section>
+          </div>
+        </section>
 
-        <!-- System Controls & Terminal -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-            <div class="hidden lg:flex lg:col-span-1 flex-col gap-4">
-                <div class="glass-card p-6">
-                    <h3 class="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2">
-                        <i class="ph-bold ph-cpu text-blue-600"></i> پنل فرمان موتور
-                    </h3>
-                    
-                    <button onclick="triggerAction('start')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl mb-3 transition-colors flex items-center justify-center gap-2 text-sm shadow-md">
-                        <i class="ph-bold ph-lightning"></i> استارت ساخت اکانت
-                    </button>
-                    
-                    <button onclick="openCheckerModal()" class="w-full bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-3 rounded-xl mb-3 transition-colors flex items-center justify-center gap-2 text-sm">
-                        <i class="ph-bold ph-scan"></i> چکر تاریخچه سفارشات
-                    </button>
-                    
-                    <hr class="border-slate-100 my-4">
+        <section id="view-accounts" class="view">
+          <div class="section-head"><div><h2 class="section-title">حساب‌ها و لینک‌های ورود</h2><p class="section-note">جست‌وجو، کپی، خروجی‌گیری و مدیریت وضعیت لینک هر حساب</p></div><div><button class="btn btn-light" onclick="downloadExport('csv')">خروجی CSV</button> <button class="btn btn-primary" onclick="downloadExport('json')">خروجی JSON</button></div></div>
+          <section class="card">
+            <div class="toolbar"><div class="tabs"><button class="tab active" id="tab-normal" onclick="switchAccounts('normal')">حساب‌های پایه</button><button class="tab" id="tab-ordered" onclick="switchAccounts('ordered')">دارای سفارش</button></div><div class="toolbar-tools"><input id="account-search" class="search" placeholder="جست‌وجوی شماره یا نام…" oninput="debouncedAccounts()"><button class="btn btn-light" onclick="copyAllLinks()">کپی لینک‌ها</button></div></div>
+            <div class="table-wrap"><table><thead><tr><th>#</th><th>شماره</th><th>نام</th><th>تاریخ ثبت</th><th>وضعیت لینک</th><th>لینک ورود</th><th>عملیات</th></tr></thead><tbody id="accounts-body"></tbody></table></div>
+            <div class="table-foot"><span id="accounts-count">—</span><span id="accounts-updated">—</span></div>
+          </section>
+        </section>
 
-                    <button onclick="stopChecker()" class="w-full bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm border border-rose-200">
-                        <i class="ph-bold ph-hand-palm"></i> توقف اضطراری موتور
-                    </button>
-                </div>
-            </div>
+        <section id="view-database" class="view">
+          <div class="section-head"><div><h2 class="section-title">وضعیت دیتابیس</h2><p class="section-note">نمایش حجم کلیدهای عملیاتی؛ مقدار حساس ذخیره‌شده نمایش داده نمی‌شود.</p></div><div><button class="btn btn-danger" onclick="askWipe()">پاک‌سازی کامل</button> <button class="btn btn-light" onclick="loadDatabase()">به‌روزرسانی</button></div></div>
+          <div class="database-grid"><section class="card db-summary"><div class="section-title">نشست‌های فعال</div><div class="db-summary-number" id="session-count">—</div><div class="section-note">کلیدهای jet_session موجود در Redis</div></section><section class="card db-list" id="db-list"><div class="empty">در حال دریافت اطلاعات…</div></section></div>
+        </section>
+      </div>
+    </main>
+  </div>
 
-            <div class="col-span-1 lg:col-span-3 glass-card overflow-hidden flex flex-col">
-                <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <i class="ph-bold ph-terminal-window text-slate-400"></i> مانیتورینگ سیستم
-                    </span>
-                    <button onclick="clearConsoleLogs()" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">پاکسازی لاگ</button>
-                </div>
-                <div class="terminal-box p-5 text-sm leading-loose" id="terminalOutput"></div>
-            </div>
-        </div>
+  <div class="modal-backdrop" id="checker-modal"><div class="modal"><div class="modal-head"><h3>بررسی سفارش‌ها</h3><button class="close" onclick="closeModal('checker-modal')">×</button></div><p class="modal-help">بازهٔ حساب‌هایی که باید بررسی شوند را مشخص کنید. شمارهٔ ردیف‌ها بر اساس ترتیب جدیدترین حساب‌هاست.</p><div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>از ردیف</label><input id="checker-start" type="number" min="1" value="1"></div><div class="field" style="flex:1"><label>تا ردیف</label><input id="checker-end" type="number" min="1" value="200"></div></div><div class="modal-actions"><button class="btn btn-light" onclick="closeModal('checker-modal')">انصراف</button><button class="btn btn-primary" onclick="submitChecker()">شروع بررسی</button></div></div></div>
+  <div class="modal-backdrop" id="confirm-modal"><div class="modal"><div class="modal-head"><h3 id="confirm-title">مدیریت عملیات</h3><button class="close" onclick="closeModal('confirm-modal')">×</button></div><p class="modal-help" id="confirm-text"></p><div class="modal-actions"><button class="btn btn-light" onclick="closeModal('confirm-modal')">انصراف</button><button class="btn btn-danger" id="delete-action">حذف حساب</button><button class="btn btn-primary" id="confirm-action">ابطال لینک</button></div></div></div>
+  <div class="modal-backdrop" id="wipe-modal"><div class="modal"><div class="modal-head"><h3>پاک‌سازی کامل داده‌ها</h3><button class="close" onclick="closeModal('wipe-modal')">×</button></div><p class="modal-help">این کار حساب‌ها، نشست‌ها، صف‌ها و گزارش‌ها را حذف می‌کند و قابل بازگردانی نیست.</p><div class="field"><label>برای تأیید عبارت زیر را وارد کنید: NEXUS-WIPE-ALL</label><input id="wipe-code" autocomplete="off"></div><div class="modal-actions"><button class="btn btn-light" onclick="closeModal('wipe-modal')">انصراف</button><button class="btn btn-danger" onclick="wipeDatabase()">پاک‌سازی</button></div></div></div>
+  <div id="toast" class="toast"></div>
 
-        <!-- Data Tables -->
-        <div class="glass-card p-6 mb-20 lg:mb-0">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <!-- Segmented Control -->
-                <div class="segment-container">
-                    <button onclick="switchTab('normal')" id="tab-normal" class="segment-btn active">اکانت‌های پایه</button>
-                    <button onclick="switchTab('ordered')" id="tab-ordered" class="segment-btn">فیلترشده (دارای سفارش)</button>
-                </div>
-                
-                <!-- Date Filter -->
-                <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-xs shadow-sm">
-                    <input type="date" id="filterDate" class="bg-transparent border-none px-2 py-1 outline-none text-slate-600 font-medium">
-                    <button onclick="resetDateFilter()" class="bg-white px-3 py-1.5 rounded-lg text-slate-600 hover:text-rose-500 font-bold shadow-sm transition-colors border border-slate-200"><i class="ph-bold ph-x"></i></button>
-                </div>
-            </div>
-
-            <div id="wrap-normal" class="overflow-x-auto">
-                <div class="mb-3 text-left">
-                    <button onclick="copyAllLinks('normal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-3 rounded-lg text-xs transition-colors flex items-center gap-1 inline-flex border border-slate-200">
-                        <i class="ph-bold ph-copy"></i> کپی تمام لینک‌ها
-                    </button>
-                </div>
-                <table id="normalTable" class="display nowrap w-full">
-                    <thead><tr><th>ردیف</th><th>موبایل</th><th>نام پروفایل</th><th>زمان ثبت</th><th>درگاه ورود</th><th>حذف</th></tr></thead><tbody></tbody>
-                </table>
-            </div>
-
-            <div id="wrap-ordered" class="overflow-x-auto hidden">
-                <div class="mb-3 text-left">
-                    <button onclick="copyAllLinks('ordered')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-3 rounded-lg text-xs transition-colors flex items-center gap-1 inline-flex border border-slate-200">
-                        <i class="ph-bold ph-copy"></i> کپی تمام لینک‌ها
-                    </button>
-                </div>
-                <table id="orderedTable" class="display nowrap w-full">
-                    <thead><tr><th>ردیف</th><th>موبایل</th><th>نام پروفایل</th><th>تعداد سفارش</th><th>درگاه ورود</th><th>حذف</th></tr></thead><tbody></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mobile Bottom Navigation -->
-    <div class="lg:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-slate-200 z-40 px-3 py-2 flex gap-2 pb-safe shadow-xl">
-        <button onclick="triggerAction('start')" class="flex-1 bg-slate-900 text-white font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 text-[11px]"><i class="ph-bold ph-lightning text-lg"></i>ساخت</button>
-        <button onclick="openCheckerModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 text-[11px]"><i class="ph-bold ph-scan text-lg"></i>بررسی</button>
-        <button onclick="stopChecker()" class="flex-1 bg-rose-50 text-rose-600 font-bold py-3 rounded-xl flex flex-col items-center justify-center gap-1 text-[11px]"><i class="ph-bold ph-hand-palm text-lg"></i>توقف</button>
-    </div>
-
-    <!-- Modals (Checker, Export, Wipe) -->
-    <!-- Checker Modal -->
-    <div id="checkerModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-slate-100">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-bold text-lg text-slate-800">تنظیمات بررسی سفارشات</h3>
-                <button onclick="closeCheckerModal()" class="text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-lg"><i class="ph-bold ph-x"></i></button>
-            </div>
-            
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
-                <label class="block text-sm font-bold text-slate-700 mb-3">محدوده اسکن اکانت‌ها:</label>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <span class="text-xs text-slate-500 block mb-1">از ردیف:</span>
-                        <input type="number" id="checkerStartIdx" value="1" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-center text-sm font-bold outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <span class="text-xs text-slate-500 block mb-1">تا ردیف:</span>
-                        <input type="number" id="checkerEndIdx" value="200" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-center text-sm font-bold outline-none focus:border-blue-500">
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="submitChecker()" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-colors">اجرای اسکنر</button>
-        </div>
-    </div>
-
-    <!-- Export Modal -->
-    <div id="exportModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-5">
-                <h3 class="font-bold text-lg text-slate-800">استخراج داده‌ها</h3>
-                <button onclick="closeExportModal()" class="text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-lg"><i class="ph-bold ph-x"></i></button>
-            </div>
-            <div class="flex flex-col gap-3">
-                <button onclick="exportData('raw_links')" class="text-right p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50 font-bold text-sm text-slate-700 transition-colors flex justify-between items-center">فقط لینک‌های لاگین <i class="ph-bold ph-file-text text-slate-400"></i></button>
-                <button onclick="exportData('links_phone')" class="text-right p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50 font-bold text-sm text-slate-700 transition-colors flex justify-between items-center">شماره موبایل + لینک <i class="ph-bold ph-list-numbers text-slate-400"></i></button>
-                <button onclick="exportData('json')" class="text-right p-3.5 rounded-xl border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 font-bold text-sm text-slate-700 transition-colors flex justify-between items-center">فایل ساختاریافته (JSON) <i class="ph-bold ph-brackets-curly text-slate-400"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Wipe Modal -->
-    <div id="wipeModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl border-t-4 border-rose-600">
-            <div class="mx-auto w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4">
-                <i class="ph-bold ph-warning text-2xl text-rose-600"></i>
-            </div>
-            <h3 class="font-bold text-lg text-slate-900 mb-2">ریست کلی دیتابیس</h3>
-            <p class="text-sm text-slate-500 mb-5 leading-relaxed">جهت تأیید حذف غیرقابل بازگشت تمامی رکوردها و لاگ‌ها، عبارت <span class="font-mono text-rose-600 font-bold select-all bg-rose-50 px-1 rounded">NEXUS-WIPE-ALL</span> را وارد کنید.</p>
-            <input type="text" id="wipeConfirmInput" placeholder="NEXUS-WIPE-ALL" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-center mb-5 font-mono outline-none focus:border-rose-500 text-sm bg-slate-50">
-            <div class="flex gap-3">
-                <button onclick="closeWipeModal()" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm transition-colors hover:bg-slate-200">انصراف</button>
-                <button onclick="confirmWipe()" class="flex-1 py-3 rounded-xl bg-rose-600 text-white font-bold text-sm transition-colors hover:bg-rose-700 shadow-md">اجرای عملیات</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-    <script>
-        let currentTab = 'normal', tNormal, tOrdered;
-
-        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            const filterVal = document.getElementById('filterDate').value;
-            if(!filterVal) return true;
-            const rowDateStr = data[3]; // Date column
-            if(!rowDateStr) return true;
-            return rowDateStr.includes(filterVal); // Simple substring match for YYYY-MM-DD
-        });
-
-        $(document).ready(function() {
-            const opts = { 
-                language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fa.json" }, 
-                pageLength: 10, 
-                order: [[0, 'asc']],
-                dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 mb-4"lf>rt<"flex flex-col sm:flex-row justify-between items-center mt-4"ip>'
-            };
-            
-            tNormal = $('#normalTable').DataTable({ ...opts,
-                columns: [
-                    { data: 'index', render: d => `<span class="text-slate-400 font-mono text-xs font-bold">${d}</span>` },
-                    { data: 'phone', render: d => `<span class="font-mono font-bold text-slate-700">${d}</span>` },
-                    { data: 'name', render: d => `<span class="text-slate-800 font-medium">${d}</span>` },
-                    { data: 'created_at', render: d => `<span class="font-mono text-xs text-slate-500">${d}</span>` },
-                    { data: 'link', render: d => `<div class="flex items-center gap-2"><input type="text" readonly value="${d}" class="text-[11px] font-mono text-slate-500 bg-white border border-slate-200 rounded-md px-2 py-1.5 w-32 sm:w-48 outline-none cursor-pointer focus:border-blue-400" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 px-2 py-1.5 rounded-md text-xs font-bold transition-colors border border-slate-200">کپی</button></div>` },
-                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-slate-50 rounded"><i class="ph-bold ph-trash text-base"></i></button>` }
-                ], ajax: { url: '/api/accounts/normal', dataSrc: 'data' }
-            });
-
-            tOrdered = $('#orderedTable').DataTable({ ...opts,
-                columns: [
-                    { data: 'index', render: d => `<span class="text-slate-400 font-mono text-xs font-bold">${d}</span>` },
-                    { data: 'phone', render: d => `<span class="font-mono font-bold text-slate-700">${d}</span>` },
-                    { data: 'name', render: d => `<span class="text-slate-800 font-medium">${d}</span>` },
-                    { data: 'total_orders', render: d => `<span class="bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs px-2.5 py-1 rounded-full">${d} سفارش</span>` },
-                    { data: 'link', render: d => `<div class="flex items-center gap-2"><input type="text" readonly value="${d}" class="text-[11px] font-mono text-slate-500 bg-white border border-slate-200 rounded-md px-2 py-1.5 w-32 sm:w-48 outline-none cursor-pointer focus:border-blue-400" onclick="this.select()"><button onclick="navigator.clipboard.writeText('${d}')" class="text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 px-2 py-1.5 rounded-md text-xs font-bold transition-colors border border-slate-200">کپی</button></div>` },
-                    { data: 'phone', orderable: false, render: d => `<button onclick="deleteAccount('${d}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-slate-50 rounded"><i class="ph-bold ph-trash text-base"></i></button>` }
-                ], ajax: { url: '/api/accounts/ordered', dataSrc: 'data' }
-            });
-            $('#filterDate').on('change', () => { tNormal.draw(); tOrdered.draw(); });
-        });
-
-        function switchTab(tab) {
-            currentTab = tab;
-            $('.segment-btn').removeClass('active');$(`#tab-${tab}`).addClass('active');
-            if (tab === 'normal') { $('#wrap-normal').show(); $('#wrap-ordered').hide(); } 
-            else { $('#wrap-normal').hide(); $('#wrap-ordered').show(); }
-        }
-
-        function resetDateFilter() { document.getElementById('filterDate').value = ''; tNormal.draw(); tOrdered.draw(); }
-
-        function copyAllLinks(type) {
-            const activeTable = type === 'normal' ? tNormal : tOrdered;
-            const rows = activeTable.rows({ search: 'applied' }).data().toArray();
-            if (rows.length === 0) return alert('داده‌ای برای کپی وجود ندارد.');
-            const links = rows.map(r => r.link).join('\n');
-            navigator.clipboard.writeText(links).then(() => alert(`${rows.length} لینک در کلیپ‌بورد کپی شد.`));
-        }
-
-        function updateEngineBadge(status) {
-            const badge = document.getElementById('engineStatusBadge');
-            const dot = document.getElementById('engineStatusDot');
-            const text = document.getElementById('engineStatusText');
-            
-            badge.className = 'status-badge hidden sm:flex items-center gap-2 transition-all';
-            
-            if (status === 'Offline') {
-                badge.classList.add('status-offline');
-                dot.className = 'h-2 w-2 rounded-full bg-rose-500';
-                text.innerText = 'موتور آفلاین';
-            } else if (status === 'Standby') {
-                badge.classList.add('status-standby');
-                dot.className = 'h-2 w-2 rounded-full bg-blue-500';
-                text.innerText = 'آماده دریافت فرمان';
-            } else {
-                badge.classList.add('status-active');
-                dot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse';
-                text.innerText = status === 'Registering' ? 'در حال ثبت‌نام' : 'در حال اسکن';
-            }
-        }
-
-        function fetchStats() {
-            fetch('/api/stats').then(res => res.json()).then(data => {
-                document.getElementById('stat-total').innerText = data.total_accounts;
-                document.getElementById('stat-ordered').innerText = data.ordered_accounts;
-                document.getElementById('stat-proxies').innerText = data.active_proxies === 0 ? "قطع/آفلاین" : data.active_proxies;
-                
-                updateEngineBadge(data.system_status);
-            }).catch(() => updateEngineBadge('Offline'));
-        }
-
-        let lastLogs = "";
-        function fetchLogs() {
-            fetch('/api/logs').then(res => res.json()).then(data => {
-                const logsStr = JSON.stringify(data.logs);
-                if (logsStr !== lastLogs) {
-                    const out = document.getElementById('terminalOutput'); out.innerHTML = '';
-                    if(data.logs.length === 0) out.innerHTML = '<span class="text-slate-600 opacity-50">منتظر دریافت رویدادهای سیستم...</span>';
-                    data.logs.forEach(l => { 
-                        const div = document.createElement('div'); div.className = 'mb-1.5 flex gap-2'; 
-                        let color = l.message.includes('❌') || l.message.includes('⛔') ? 'text-rose-400' : (l.message.includes('✅') || l.message.includes('🎯') ? 'text-emerald-400' : 'text-slate-300');
-                        div.innerHTML = `<span class="text-slate-500 opacity-50 shrink-0">[${l.timestamp}]</span> <span class="${color}">${l.message}</span>`; 
-                        out.appendChild(div); 
-                    });
-                    out.scrollTop = out.scrollHeight; lastLogs = logsStr;
-                    tNormal.ajax.reload(null, false);
-                    tOrdered.ajax.reload(null, false);
-                }
-            });
-        }
-        setInterval(fetchStats, 3000); setInterval(fetchLogs, 3000); fetchStats(); fetchLogs();
-
-        function triggerAction(action) { fetch(`/api/action/${action}`, { method: 'POST' }).then(() => fetchStats()); }
-        function deleteAccount(phone) { if(confirm('رکورد حذف شود؟')) { fetch('/api/action/delete_account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({phone: phone}) }).then(() => { tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); }); } }
-        
-        function openCheckerModal() { document.getElementById('checkerModal').classList.remove('hidden'); }
-        function closeCheckerModal() { document.getElementById('checkerModal').classList.add('hidden'); }
-        
-        function submitChecker() {
-            const startVal = parseInt(document.getElementById('checkerStartIdx').value) || 1;
-            const endVal = parseInt(document.getElementById('checkerEndIdx').value) || 200;
-
-            fetch('/api/checker/start', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ start_idx: startVal, end_idx: endVal })
-            }).then(res => res.json()).then(data => {
-                closeCheckerModal();
-                fetchStats();
-            });
-        }
-
-        function stopChecker() {
-            fetch('/api/checker/stop', { method: 'POST' }).then(res => res.json()).then(data => {
-                fetchStats();
-            });
-        }
-
-        function clearConsoleLogs() {
-            fetch('/api/action/clear_logs', { method: 'POST' }).then(res => res.json()).then(data => {
-                document.getElementById('terminalOutput').innerHTML = '<span class="text-slate-600 opacity-50">لاگ‌ها پاکسازی شدند.</span>';
-                lastLogs = "";
-                fetchStats();
-            });
-        }
-
-        function openWipeModal() { document.getElementById('wipeConfirmInput').value = ''; document.getElementById('wipeModal').classList.remove('hidden'); }
-        function closeWipeModal() { document.getElementById('wipeModal').classList.add('hidden'); }
-        function confirmWipe() {
-            fetch('/api/action/clean', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({code: document.getElementById('wipeConfirmInput').value}) })
-            .then(res => res.json()).then(data => { if(data.status==='error') alert(data.message); closeWipeModal(); tNormal.ajax.reload(null, false); tOrdered.ajax.reload(null, false); fetchStats(); });
-        }
-
-        function openExportModal() { document.getElementById('exportModal').classList.remove('hidden'); }
-        function closeExportModal() { document.getElementById('exportModal').classList.add('hidden'); }
-        function exportData(type) {
-            const activeTable = currentTab === 'normal' ? tNormal : tOrdered;
-            const rows = activeTable.rows({ search: 'applied' }).data().toArray();
-            if (rows.length === 0) return alert('داده‌ای وجود ندارد.');
-            let content = "", name = `Export_${currentTab}_${type}.txt`, mime = "text/plain;charset=utf-8";
-            if (type === 'raw_links') content = rows.map(r => r.link).join('\n');
-            else if (type === 'links_phone') content = rows.map(r => `${r.phone} - ${r.link}`).join('\n');
-            else if (type === 'json') { content = JSON.stringify(rows, null, 2); name = `Export_${currentTab}.json`; mime = "application/json;charset=utf-8"; }
-            const blob = new Blob([content], { type: mime }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; link.click(); closeExportModal();
-        }
-    </script>
+  <script>
+    let currentView = 'dashboard', accountType = 'normal', accounts = [], logSignature = '', searchTimer;
+    const viewMeta = {
+      dashboard: ['نمای کلی', 'وضعیت موتور و داده‌های اصلی سرویس'],
+      accounts: ['حساب‌ها و لینک‌ها', 'مدیریت حساب‌ها و لینک‌های ورود'],
+      database: ['وضعیت دیتابیس', 'نمایش اندازهٔ کلیدهای عملیاتی Redis']
+    };
+    const $ = id => document.getElementById(id);
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+    function toast(message, error = false) { const el = $('toast'); el.textContent = message; el.className = `toast show${error ? ' error' : ''}`; clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => el.className = 'toast', 3200); }
+    async function api(url, options = {}) { const response = await fetch(url, options); const data = await response.json(); if (!response.ok) throw new Error(data.message || data.error || 'عملیات انجام نشد.'); return data; }
+    function openModal(id) { $(id).classList.add('open'); } function closeModal(id) { $(id).classList.remove('open'); }
+    function switchView(view) { currentView = view; document.querySelectorAll('.view').forEach(el => el.classList.toggle('active', el.id === `view-${view}`)); document.querySelectorAll('.nav-btn').forEach(el => el.classList.toggle('active', el.dataset.view === view)); $('page-title').textContent = viewMeta[view][0]; $('page-subtitle').textContent = viewMeta[view][1]; if (view === 'accounts') loadAccounts(); if (view === 'database') loadDatabase(); }
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
+    function statusText(status) { return ({Offline:'موتور در دسترس نیست', Standby:'آمادهٔ دریافت فرمان', Registering:'در حال ثبت‌نام حساب‌ها', Checking:'در حال بررسی سفارش‌ها'})[status] || status; }
+    async function loadStats() {
+      try {
+        const data = await api('/api/stats');
+        $('stat-total').textContent = data.total_accounts.toLocaleString('fa-IR'); $('stat-ordered').textContent = data.ordered_accounts.toLocaleString('fa-IR');
+        $('stat-proxies').textContent = data.active_proxies ? data.active_proxies.toLocaleString('fa-IR') : '—'; $('stat-queue').textContent = (data.new_accounts_queue + data.command_queue).toLocaleString('fa-IR');
+        $('engine-status').textContent = statusText(data.system_status); $('engine-detail').textContent = data.checker_running ? 'فرآیند بررسی فعال است' : `صف فرمان: ${data.command_queue.toLocaleString('fa-IR')} مورد`;
+        $('side-status').textContent = statusText(data.system_status); $('connection').classList.toggle('offline', !data.database_connected);
+        const point = $('engine-point'); point.className = `status-point ${data.system_status === 'Offline' ? '' : data.checker_running || data.system_status === 'Registering' ? 'busy' : 'active'}`;
+      } catch (error) { $('connection').classList.add('offline'); $('side-status').textContent = 'اتصال دیتابیس برقرار نیست'; $('engine-status').textContent = 'اتصال برقرار نشد'; }
+    }
+    async function loadLogs() {
+      try { const data = await api('/api/logs'); const signature = JSON.stringify(data.logs); if (signature === logSignature) return; logSignature = signature; $('logs').innerHTML = data.logs.length ? data.logs.map(item => `<div class="log-row"><span class="log-time">[${escapeHtml(item.timestamp)}]</span>${escapeHtml(item.message)}</div>`).join('') : '<div style="color:#7186a3">گزارشی ثبت نشده است.</div>'; $('logs').scrollTop = $('logs').scrollHeight; } catch (error) {}
+    }
+    async function startBulk() { try { const data = await api('/api/action/start', {method:'POST'}); toast(data.message); loadStats(); } catch (error) { toast(error.message, true); } }
+    async function stopChecker() { try { const data = await api('/api/checker/stop', {method:'POST'}); toast(data.message); loadStats(); } catch (error) { toast(error.message, true); } }
+    async function clearLogs() { try { const data = await api('/api/action/clear_logs', {method:'POST'}); logSignature = ''; toast(data.message); loadLogs(); } catch (error) { toast(error.message, true); } }
+    function openChecker() { openModal('checker-modal'); } function submitChecker() { const start = Math.max(1, parseInt($('checker-start').value) || 1), end = Math.max(start, parseInt($('checker-end').value) || 200); api('/api/checker/start', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({start_idx:start,end_idx:end})}).then(data => { closeModal('checker-modal'); toast(data.message); loadStats(); }).catch(error => toast(error.message, true)); }
+    function switchAccounts(type) { accountType = type; $('tab-normal').classList.toggle('active', type === 'normal'); $('tab-ordered').classList.toggle('active', type === 'ordered'); loadAccounts(); }
+    function debouncedAccounts() { clearTimeout(searchTimer); searchTimer = setTimeout(loadAccounts, 250); }
+    function linkCell(row) { return `<div class="link-cell"><span class="link-value" title="${escapeHtml(row.link)}">${escapeHtml(row.link)}</span><button class="copy-btn" onclick="copyLink('${encodeURIComponent(row.link)}')">کپی</button></div>`; }
+    function renderAccounts() {
+      $('accounts-count').textContent = `${accounts.length.toLocaleString('fa-IR')} حساب`;
+      $('accounts-updated').textContent = `آخرین به‌روزرسانی: ${new Date().toLocaleTimeString('fa-IR', {hour:'2-digit',minute:'2-digit'})}`;
+      $('accounts-body').innerHTML = accounts.length ? accounts.map(row => `<tr><td class="row-index">${row.index}</td><td class="phone">${escapeHtml(row.phone)}</td><td class="name">${escapeHtml(row.name || '—')}</td><td class="muted">${escapeHtml(row.created_at || '—')}</td><td><span class="pill ${row.link_active ? 'pill-green' : 'pill-gray'}">${row.link_active ? 'فعال' : 'باطل‌شده'}</span></td><td>${linkCell(row)}</td><td><button class="more-btn" onclick="openRowActions('${encodeURIComponent(row.phone)}')">مدیریت</button></td></tr>`).join('') : '<tr><td class="empty" colspan="7">حسابی با این مشخصات پیدا نشد.</td></tr>';
+    }
+    async function loadAccounts() { try { const q = encodeURIComponent($('account-search').value || ''); const data = await api(`/api/accounts/${accountType}?q=${q}`); accounts = data.data; renderAccounts(); } catch (error) { toast(error.message, true); } }
+    async function copyLink(value) { try { await navigator.clipboard.writeText(decodeURIComponent(value)); toast('لینک کپی شد.'); } catch (error) { toast('کپی لینک انجام نشد.', true); } }
+    async function copyAllLinks() { if (!accounts.length) return toast('لینکی برای کپی وجود ندارد.', true); try { await navigator.clipboard.writeText(accounts.map(row => row.link).join('\n')); toast(`${accounts.length.toLocaleString('fa-IR')} لینک کپی شد.`); } catch (error) { toast('کپی لینک‌ها انجام نشد.', true); } }
+    function openRowActions(phone) { const decoded = decodeURIComponent(phone); $('confirm-title').textContent = 'مدیریت حساب'; $('confirm-text').textContent = `می‌توانید لینک ورود حساب ${decoded} را باطل کنید یا کل رکورد حساب را حذف کنید.`; $('confirm-action').textContent = 'ابطال لینک'; $('confirm-action').onclick = () => revokeLink(decoded); $('delete-action').onclick = () => deleteAccount(decoded); openModal('confirm-modal'); }
+    async function revokeLink(phone) { closeModal('confirm-modal'); try { const data = await api('/api/action/revoke_link', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone})}); toast(data.message); loadAccounts(); } catch (error) { toast(error.message, true); } }
+    async function deleteAccount(phone) { if (!window.confirm(`رکورد حساب ${phone} حذف شود؟ این کار نشست لینک را هم حذف می‌کند.`)) return; closeModal('confirm-modal'); try { const data = await api('/api/action/delete_account', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone})}); toast(data.message, data.status !== 'ok'); loadAccounts(); loadStats(); loadDatabase(); } catch (error) { toast(error.message, true); } }
+    function downloadExport(format) { window.location.href = `/api/export/${accountType}/${format}?q=${encodeURIComponent($('account-search').value || '')}`; }
+    async function loadDatabase() { try { const data = await api('/api/database/overview'); $('session-count').textContent = data.sessions.toLocaleString('fa-IR'); $('db-list').innerHTML = data.items.map(item => `<div class="db-row"><div><div class="db-label">${escapeHtml(item.label)}</div><div class="db-key">${escapeHtml(item.key)}</div></div><span class="db-count">${item.size.toLocaleString('fa-IR')} مورد</span></div>`).join(''); } catch (error) { $('db-list').innerHTML = '<div class="empty">اطلاعات دیتابیس قابل دریافت نیست.</div>'; } }
+    function askWipe() { openModal('wipe-modal'); }
+    async function wipeDatabase() { if ($('wipe-code').value !== 'NEXUS-WIPE-ALL') return toast('عبارت تأیید درست نیست.', true); try { const data = await api('/api/action/clean', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:$('wipe-code').value})}); closeModal('wipe-modal'); toast(data.message); loadStats(); loadDatabase(); loadAccounts(); } catch (error) { toast(error.message, true); } }
+    loadStats(); loadLogs(); setInterval(loadStats, 5000); setInterval(loadLogs, 5000);
+  </script>
 </body>
-                    </html>
+</html>
